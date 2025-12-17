@@ -2,7 +2,7 @@ import { useMemo, useState, useRef, useEffect } from "react";
 import type { Product } from "../types/Product";
 import { searchProducts } from "../utils/searchUtils";
 import SearchResultItem from "./SearchResultItem";
-import { MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 
 interface Props {
     query: string;
