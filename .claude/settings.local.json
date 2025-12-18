@@ -5,7 +5,10 @@
       "Bash(npm run build:*)",
       "Bash(npm run dev:*)",
       "Bash(tree:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git fetch:*)",
+      "Bash(git merge:*)",
+      "Bash(git commit:*)"
     ]
   }
 }
