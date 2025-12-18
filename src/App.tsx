@@ -9,7 +9,7 @@ import type { Product } from "./types/Product";
 export default function App() {
     const [query, setQuery] = useState<string>("");
     const [selected, setSelected] = useState<Product | null>(null);
-    const { history, addToHistory, removeFromHistory, clearHistory } = useSearchHistory();
+    const { history, historyItems, addToHistory, removeFromHistory, clearHistory } = useSearchHistory();
 
     const handleSelectProduct = (product: Product) => {
         setSelected(product);
@@ -20,6 +20,12 @@ export default function App() {
         <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 px-4 py-8 pb-20">
             <div className="w-full max-w-4xl mx-auto">
                 <main className="space-y-6">
+                    <div className="mb-8">
+                        <p className="text-sm sm:text-base text-indigo-300/80 font-medium tracking-wide leading-relaxed">
+                            Imi este lene sa invat codurile, asa ca am creat o aplicatie sa imi zica codurile.
+                        </p>
+                    </div>
+
                     <SearchBar
                         query={query}
                         onChange={setQuery}
@@ -30,6 +36,7 @@ export default function App() {
                     {!selected && history.length > 0 && (
                         <SearchHistory
                             history={history}
+                            historyItems={historyItems}
                             onSelectProduct={handleSelectProduct}
                             onDeleteItem={removeFromHistory}
                             onClearAll={clearHistory}

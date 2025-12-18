@@ -4,8 +4,13 @@ import type { Product } from "../types/Product";
 const HISTORY_KEY = "product-search-history";
 const MAX_HISTORY_ITEMS = 10;
 
+export interface HistoryItem {
+  product: Product;
+  timestamp: number;
+}
+
 export function useSearchHistory() {
-  const [history, setHistory] = useState<Product[]>([]);
+  const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
 
   // Load history from localStorage on mount
   useEffect(() => {
@@ -13,7 +18,7 @@ export function useSearchHistory() {
       const stored = localStorage.getItem(HISTORY_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
-        setHistory(parsed);
+        setHistoryItems(parsed);
       }
     } catch (error) {
       console.error("Failed to load search history:", error);
@@ -23,31 +28,34 @@ export function useSearchHistory() {
   // Save history to localStorage whenever it changes
   useEffect(() => {
     try {
-      localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(historyItems));
     } catch (error) {
       console.error("Failed to save search history:", error);
     }
-  }, [history]);
+  }, [historyItems]);
 
   const addToHistory = (product: Product) => {
-    setHistory((prev) => {
-      // Remove if already exists
-      const filtered = prev.filter((p) => p.Material !== product.Material);
-      // Add to beginning and limit to MAX_HISTORY_ITEMS
-      return [product, ...filtered].slice(0, MAX_HISTORY_ITEMS);
+    setHistoryItems((prev) => {
+      const filtered = prev.filter((item) => item.product.Material !== product.Material);
+      const newItem: HistoryItem = {
+        product,
+        timestamp: Date.now()
+      };
+      return [newItem, ...filtered].slice(0, MAX_HISTORY_ITEMS);
     });
   };
 
   const removeFromHistory = (materialCode: string) => {
-    setHistory((prev) => prev.filter((p) => p.Material !== materialCode));
+    setHistoryItems((prev) => prev.filter((item) => item.product.Material !== materialCode));
   };
 
   const clearHistory = () => {
-    setHistory([]);
+    setHistoryItems([]);
   };
 
   return {
-    history,
+    history: historyItems.map(item => item.product),
+    historyItems,
     addToHistory,
     removeFromHistory,
     clearHistory,
