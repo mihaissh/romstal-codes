@@ -1,8 +1,11 @@
-import { useMemo, useState, useRef, useEffect } from "react";
+import { useMemo, useState, useRef, useEffect, memo, useCallback } from "react";
 import type { Product } from "../types/Product";
 import { searchProducts } from "../utils/searchUtils";
 import SearchResultItem from "./SearchResultItem";
-import { MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import { useDebounce } from "../hooks/useDebounce";
+import { useClickOutside } from "../hooks/useClickOutside";
+import { DEBOUNCE_DELAY } from "../constants/searchConstants";
 
 interface Props {
     query: string;
@@ -11,29 +14,23 @@ interface Props {
     onSelect: (product: Product) => void;
 }
 
-export default function SearchBar({ query, onChange, products, onSelect }: Props) {
+function SearchBarComponent({ query, onChange, products, onSelect }: Props) {
     const [open, setOpen] = useState<boolean>(false);
     const [selectedIndex, setSelectedIndex] = useState<number>(-1);
     const containerRef = useRef<HTMLDivElement>(null);
     const listRef = useRef<HTMLUListElement>(null);
 
-    // Close dropdown when clicking outside
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-                setOpen(false);
-            }
-        };
+    // Debounce the search query to prevent excessive searches
+    const debouncedQuery = useDebounce(query, DEBOUNCE_DELAY);
 
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
+    // Close dropdown when clicking outside
+    useClickOutside(containerRef, useCallback(() => setOpen(false), []));
 
     const results = useMemo(() => {
-        return searchProducts(query, products, 10);
-    }, [query, products]);
+        return searchProducts(debouncedQuery, products, Infinity);
+    }, [debouncedQuery, products]);
 
-    // Extract keywords from query for highlighting
+    // Extract keywords from query for highlighting (responsive, not debounced)
     const keywords = useMemo(() => {
         return query
             .toLowerCase()
@@ -42,32 +39,32 @@ export default function SearchBar({ query, onChange, products, onSelect }: Props
             .filter(k => k.length > 0);
     }, [query]);
 
-    // Reset selected index when query changes
+    // Reset selected index when debounced query changes
     useEffect(() => {
         setSelectedIndex(-1);
-    }, [query]);
+    }, [debouncedQuery]);
 
-    // Scroll selected item into view
+    // Scroll selected item into view with instant scrolling
     useEffect(() => {
         if (selectedIndex >= 0 && listRef.current) {
             const selectedElement = listRef.current.children[selectedIndex] as HTMLElement;
             if (selectedElement) {
                 selectedElement.scrollIntoView({
                     block: 'nearest',
-                    behavior: 'smooth'
+                    behavior: 'auto'
                 });
             }
         }
     }, [selectedIndex]);
 
-    const handleSelect = (product: Product) => {
+    const handleSelect = useCallback((product: Product) => {
         onChange(product.Material);
         onSelect(product);
         setOpen(false);
         setSelectedIndex(-1);
-    };
+    }, [onChange, onSelect]);
 
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
         if (!open || results.length === 0) return;
 
         switch (e.key) {
@@ -92,7 +89,12 @@ export default function SearchBar({ query, onChange, products, onSelect }: Props
                 setSelectedIndex(-1);
                 break;
         }
-    };
+    }, [open, results, selectedIndex, handleSelect]);
+
+    const handleClearQuery = useCallback(() => {
+        onChange("");
+        setOpen(false);
+    }, [onChange]);
 
     return (
         <div
@@ -100,8 +102,8 @@ export default function SearchBar({ query, onChange, products, onSelect }: Props
             className="relative w-full"
         >
             <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none">
-                    <MagnifyingGlassIcon className="w-6 h-6 text-slate-500" />
+                <div className="absolute inset-y-0 left-0 pl-4 sm:pl-6 flex items-center pointer-events-none">
+                    <MagnifyingGlassIcon className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-400" />
                 </div>
                 <input
                     value={query}
@@ -112,15 +114,13 @@ export default function SearchBar({ query, onChange, products, onSelect }: Props
                     onFocus={() => setOpen(true)}
                     onKeyDown={handleKeyDown}
                     placeholder="Cauta produs dupa cod, nume sau keyword-uri..."
-                    className="w-full rounded-2xl border-2 border-slate-700 bg-slate-800/50 backdrop-blur-sm pl-12 sm:pl-14 pr-12 sm:pr-6 py-4 sm:py-6 text-base sm:text-lg font-medium text-slate-100 placeholder-slate-500 shadow-xl transition-all duration-300 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 focus:bg-slate-800/80 hover:border-slate-600"
+                    className="w-full rounded-2xl border-2 border-slate-700/50 bg-slate-800/60 backdrop-blur-md pl-12 sm:pl-14 pr-12 sm:pr-6 py-4 sm:py-6 text-base sm:text-lg font-medium text-slate-100 placeholder-slate-400 shadow-2xl shadow-black/30 transition-all duration-300 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/40 focus:bg-slate-800/90 focus:shadow-lg focus:shadow-indigo-500/20 hover:border-slate-600/70 hover:bg-slate-800/70"
                 />
                 {query && (
                     <button
-                        onClick={() => {
-                            onChange("");
-                            setOpen(false);
-                        }}
+                        onClick={handleClearQuery}
                         className="absolute inset-y-0 right-0 pr-6 flex items-center text-slate-500 hover:text-slate-300 transition-colors"
+                        aria-label="Clear search"
                     >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -130,26 +130,13 @@ export default function SearchBar({ query, onChange, products, onSelect }: Props
             </div>
 
             {open && results.length > 0 && (
-                <div className="absolute z-50 mt-3 w-full rounded-2xl bg-slate-800/95 backdrop-blur-xl shadow-2xl shadow-black/20 border border-slate-700 overflow-hidden animate-slide-in-down">
-                    <div className="px-6 py-3 border-b border-slate-700 bg-slate-800/80">
-                        <div className="flex items-center justify-between">
-                            <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                                {results.length} {results.length === 1 ? 'result' : 'results'}
-                            </div>
-                            <div className="flex items-center gap-3 text-xs">
-                                <div className="flex items-center gap-1">
-                                    <div className="w-2 h-2 rounded-full bg-green-500" />
-                                    <span className="text-slate-500">In Stock</span>
-                                </div>
-                                <div className="flex items-center gap-1">
-                                    <div className="w-2 h-2 rounded-full bg-yellow-500" />
-                                    <span className="text-slate-500">Low</span>
-                                </div>
-                                <div className="flex items-center gap-1">
-                                    <div className="w-2 h-2 rounded-full bg-red-500" />
-                                    <span className="text-slate-500">Out</span>
-                                </div>
-                            </div>
+                <div className="absolute z-50 mt-3 w-full rounded-2xl bg-slate-800/95 backdrop-blur-xl shadow-2xl shadow-indigo-500/10 border border-slate-700/80 overflow-hidden animate-slide-in-down">
+                    <div className="px-6 py-3 border-b border-slate-700/60 bg-gradient-to-r from-slate-800/60 to-slate-700/40">
+                        <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse" />
+                            <span className="text-sm font-bold text-indigo-300">
+                                {results.length} {results.length === 1 ? 'resultat' : 'rezultate'}
+                            </span>
                         </div>
                     </div>
                     <ul ref={listRef} className="py-2 max-h-96 overflow-y-auto custom-scrollbar">
@@ -178,3 +165,5 @@ export default function SearchBar({ query, onChange, products, onSelect }: Props
         </div>
     );
 }
+
+export default memo(SearchBarComponent);
