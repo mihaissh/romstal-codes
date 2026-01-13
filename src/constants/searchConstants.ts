@@ -23,23 +23,12 @@ export const SEARCH_SCORES = {
  */
 export const FUZZY_MATCH = {
     MIN_KEYWORD_LENGTH: 3,
-    MAX_DISTANCE: 3,
-    DYNAMIC_DISTANCE: true,
 } as const;
 
 /**
  * Debounce delays
  */
 export const DEBOUNCE_DELAY = 200; // ms
-
-/**
- * UI Constants
- */
-export const UI = {
-    RESULTS_MAX_HEIGHT: 96, // max-h-96 = 24rem
-    SEARCH_DROPDOWN_DELAY: 'animate-slide-in-down',
-    DROPDOWN_Z_INDEX: 50,
-} as const;
 
 /**
  * Stock status thresholds

@@ -8,7 +8,12 @@
       "Bash(git add:*)",
       "Bash(git fetch:*)",
       "Bash(git merge:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(for keyword in \"RACORD\" \"COT\" \"ROBINET\" \"TEU\" \"REDUCTIE\" \"MUFA\" \"TEAVA\" \"TUB\" \"COLIER\" \"DOP\")",
+      "Bash(do)",
+      "Bash(echo:*)",
+      "Bash(done)"
     ]
   }
 }
