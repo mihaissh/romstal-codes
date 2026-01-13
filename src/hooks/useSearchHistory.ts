@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import type { Product } from "../types/Product";
 
-const HISTORY_KEY = "product-search-history";
+const HISTORY_KEY_PREFIX = "product-search-history-";
 const MAX_HISTORY_ITEMS = 10;
 
 export interface HistoryItem {
@@ -9,30 +9,34 @@ export interface HistoryItem {
   timestamp: number;
 }
 
-export function useSearchHistory() {
+export function useSearchHistory(storeCode: string) {
   const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
+  const historyKey = `${HISTORY_KEY_PREFIX}${storeCode}`;
 
-  // Load history from localStorage on mount
+  // Load history from localStorage on mount or when store changes
   useEffect(() => {
     try {
-      const stored = localStorage.getItem(HISTORY_KEY);
+      const stored = localStorage.getItem(historyKey);
       if (stored) {
         const parsed = JSON.parse(stored);
         setHistoryItems(parsed);
+      } else {
+        setHistoryItems([]);
       }
     } catch (error) {
       console.error("Failed to load search history:", error);
+      setHistoryItems([]);
     }
-  }, []);
+  }, [storeCode, historyKey]);
 
   // Save history to localStorage whenever it changes
   useEffect(() => {
     try {
-      localStorage.setItem(HISTORY_KEY, JSON.stringify(historyItems));
+      localStorage.setItem(historyKey, JSON.stringify(historyItems));
     } catch (error) {
       console.error("Failed to save search history:", error);
     }
-  }, [historyItems]);
+  }, [historyItems, historyKey]);
 
   const addToHistory = (product: Product) => {
     setHistoryItems((prev) => {

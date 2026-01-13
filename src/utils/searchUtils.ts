@@ -1,10 +1,15 @@
 import type { Product } from "../types/Product";
+import type { IndexedProduct } from "./searchIndex";
 import {
     SEARCH_SCORES,
     FUZZY_MATCH,
     SEARCHABLE_FIELDS,
     STOCK_THRESHOLDS,
 } from "../constants/searchConstants";
+import { expandQueryWithSynonyms } from "./searchSynonyms";
+import { getNormalizedDescription, getNormalizedMaterial } from "./searchIndex";
+import { searchCache } from "./searchCache";
+import { InvertedIndex } from "./invertedIndex";
 
 export interface ScoredProduct {
     product: Product;
@@ -89,15 +94,58 @@ function scoreProductCode(code: string, keyword: string): number {
     return 0;
 }
 
-export function searchProducts(query: string, products: Product[], limit: number = 8): ScoredProduct[] {
+// Global inverted index instance (one per store)
+let globalInvertedIndex: InvertedIndex | null = null;
+let lastProductsLength: number = 0;
+let lastProductsFirstId: string | null = null;
+
+/**
+ * Initialize or update the inverted index when products change
+ * Uses length and first product ID to detect changes efficiently
+ */
+function ensureInvertedIndex(products: Product[] | IndexedProduct[]): InvertedIndex {
+    // Check if we need to rebuild the index
+    const currentLength = products.length;
+    const currentFirstId = products.length > 0 ? products[0].Material : null;
+    
+    if (!globalInvertedIndex || 
+        lastProductsLength !== currentLength || 
+        lastProductsFirstId !== currentFirstId) {
+        globalInvertedIndex = new InvertedIndex();
+        globalInvertedIndex.build(products);
+        lastProductsLength = currentLength;
+        lastProductsFirstId = currentFirstId;
+    }
+    return globalInvertedIndex;
+}
+
+/**
+ * Clear the inverted index (called when store changes)
+ */
+export function clearInvertedIndex(): void {
+    globalInvertedIndex = null;
+    lastProductsLength = 0;
+    lastProductsFirstId = null;
+}
+
+export function searchProducts(query: string, products: Product[] | IndexedProduct[], limit: number = 50): ScoredProduct[] {
     if (!query || query.trim().length === 0) {
         return [];
     }
 
+    const normalizedQuery = query.toLowerCase().trim();
+    
+    // Check cache first (only for longer queries to avoid cache pollution)
+    if (normalizedQuery.length >= 3) {
+        const cached = searchCache.get(normalizedQuery);
+        if (cached) {
+            // Ensure cached results are limited to the requested limit
+            return cached.slice(0, limit);
+        }
+    }
+
     // Split query into keywords and clean them
-    const keywords = query
-        .toLowerCase()
-        .trim()
+    const keywords = normalizedQuery
         .split(/\s+/)
         .filter(k => k.length > 0);
 
@@ -105,10 +153,66 @@ export function searchProducts(query: string, products: Product[], limit: number
         return [];
     }
 
-    const scoredProducts: ScoredProduct[] = [];
+    // Expand keywords with synonyms for better search results
+    const expandedKeywords = expandQueryWithSynonyms(keywords);
 
-    for (const product of products) {
-        const score = calculateScore(product, keywords);
+    // Build/ensure inverted index is ready
+    const invertedIndex = ensureInvertedIndex(products);
+
+    // Use inverted index to find candidate products (O(1) per keyword lookup)
+    // This is MUCH faster than filtering through all products
+    let candidateIndices = invertedIndex.findProductsWithAllKeywords(keywords);
+
+    // If no exact matches, try with synonyms (for each keyword, try original OR synonym)
+    if (candidateIndices.size === 0 && expandedKeywords.length > keywords.length) {
+        // Try finding products where each keyword OR its synonym matches
+        // This is more complex but handles synonym expansion
+        
+        // For each keyword, get products matching it OR its synonyms
+        const keywordMatchSets: Set<number>[] = [];
+        
+        for (const keyword of keywords) {
+            const keywordMatches = new Set<number>();
+            
+            // Add products matching the original keyword
+            const originalMatches = invertedIndex.findProductsWithAllKeywords([keyword]);
+            originalMatches.forEach(idx => keywordMatches.add(idx));
+            
+            // Add products matching synonyms of this keyword
+            const keywordSynonyms = expandedKeywords.filter(k => k !== keyword);
+            for (const synonym of keywordSynonyms) {
+                const synonymMatches = invertedIndex.findProductsWithAllKeywords([synonym]);
+                synonymMatches.forEach(idx => keywordMatches.add(idx));
+            }
+            
+            keywordMatchSets.push(keywordMatches);
+        }
+        
+        // Intersect all sets: products that match (keyword OR synonym) for ALL keywords
+        if (keywordMatchSets.length > 0) {
+            candidateIndices = keywordMatchSets[0];
+            for (let i = 1; i < keywordMatchSets.length; i++) {
+                candidateIndices = new Set(
+                    Array.from(candidateIndices).filter(idx => keywordMatchSets[i].has(idx))
+                );
+                if (candidateIndices.size === 0) break;
+            }
+        }
+    }
+
+    // If still no results, return empty (exact search - all keywords must match)
+    if (candidateIndices.size === 0) {
+        return [];
+    }
+
+    // Score only the candidate products (dramatically fewer than all products)
+    const scoredProducts: ScoredProduct[] = [];
+    
+    for (const productIndex of candidateIndices) {
+        const product = invertedIndex.getProduct(productIndex);
+        if (!product) continue;
+
+        const score = calculateScore(product, keywords, expandedKeywords, invertedIndex, productIndex);
 
         if (score.totalScore > 0) {
             scoredProducts.push({
@@ -119,10 +223,16 @@ export function searchProducts(query: string, products: Product[], limit: number
                 matchedFields: score.matchedFields
             });
         }
+        
+        // Early termination: if we have enough high-scoring results, we can stop early
+        // This helps performance - we only need to score enough to get the top results
+        if (scoredProducts.length >= limit * 3) {
+            break;
+        }
     }
 
     // Sort by score (descending), then by stock (descending)
-    return scoredProducts
+    const sortedResults = scoredProducts
         .sort((a, b) => {
             if (b.score !== a.score) {
                 return b.score - a.score;
@@ -130,37 +240,53 @@ export function searchProducts(query: string, products: Product[], limit: number
             return b.product["Fără restr."] - a.product["Fără restr."];
         })
         .slice(0, limit);
+
+    // Cache results for future searches
+    if (normalizedQuery.length >= 3 && sortedResults.length > 0) {
+        searchCache.set(normalizedQuery, sortedResults);
+    }
+
+    return sortedResults;
 }
 
-function calculateScore(product: Product, keywords: string[]): {
+function calculateScore(
+    product: Product | IndexedProduct, 
+    keywords: string[], 
+    expandedKeywords: string[],
+    invertedIndex?: InvertedIndex,
+    productIndex?: number
+): {
     totalScore: number;
     matchType: 'exact' | 'start' | 'contains';
     matchedKeywords: string[];
     matchedFields: string[];
 } {
-    const materialCode = product[SEARCHABLE_FIELDS.MATERIAL].toLowerCase();
-    const description = product[SEARCHABLE_FIELDS.DESCRIPTION].toLowerCase();
+    // Use indexed data if available for faster lookups
+    const productIsIndexed = '_searchIndex' in product;
+    const materialCode = productIsIndexed 
+        ? getNormalizedMaterial(product as IndexedProduct)
+        : product[SEARCHABLE_FIELDS.MATERIAL].toLowerCase();
+    const description = productIsIndexed
+        ? getNormalizedDescription(product as IndexedProduct)
+        : product[SEARCHABLE_FIELDS.DESCRIPTION].toLowerCase();
     const storageLocation = product[SEARCHABLE_FIELDS.STORAGE_LOCATION].toLowerCase();
     const storageDesc = product[SEARCHABLE_FIELDS.STORAGE_DESC].toLowerCase();
-
-    const searchableText = `${materialCode} ${description} ${storageLocation} ${storageDesc}`;
 
     let totalScore = 0;
     let matchType: 'exact' | 'start' | 'contains' = 'contains';
     const matchedKeywords: string[] = [];
     const matchedFields: string[] = [];
 
-    // Early exit if not all keywords match
-    if (!keywords.every(keyword => searchableText.includes(keyword))) {
-        return { totalScore: 0, matchType: 'contains', matchedKeywords: [], matchedFields: [] };
-    }
+    // Since we're using inverted index, we know all keywords match (or we wouldn't be here)
+    // But we still need to verify and score the matches
 
     totalScore = SEARCH_SCORES.BASE_SCORE;
 
     for (const keyword of keywords) {
         let keywordMatched = false;
+        let synonymMatched = false;
 
-        // Score product code with fuzzy matching
+        // Score product code with fuzzy matching (only on original keyword, not synonyms)
         const codeScore = scoreProductCode(materialCode, keyword);
         if (codeScore > 0) {
             totalScore += codeScore;
@@ -175,6 +301,40 @@ function calculateScore(product: Product, keywords: string[]): {
             }
         }
 
+        // Check synonyms for description matching (only if original keyword didn't match description)
+        // Use fast inverted index lookup if available
+        const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const keywordRegex = new RegExp(`\\b${escapedKeyword}\\b`, 'i');
+        
+        if (!keywordRegex.test(description)) {
+            const keywordSynonyms = expandedKeywords.filter(k => k !== keyword);
+            for (const synonym of keywordSynonyms) {
+                // Use inverted index for fast synonym check
+                if (invertedIndex && productIndex !== undefined) {
+                    if (invertedIndex.productHasWord(productIndex, synonym)) {
+                        totalScore += SEARCH_SCORES.DESCRIPTION_CONTAINS;
+                        synonymMatched = true;
+                        if (!matchedFields.includes(SEARCHABLE_FIELDS.DESCRIPTION)) {
+                            matchedFields.push(SEARCHABLE_FIELDS.DESCRIPTION);
+                        }
+                        break;
+                    }
+                } else {
+                    // Fallback: regex-based synonym matching
+                    const escapedSynonym = synonym.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    const synonymRegex = new RegExp(`\\b${escapedSynonym}\\b`, 'i');
+                    if (synonymRegex.test(description)) {
+                        totalScore += SEARCH_SCORES.DESCRIPTION_CONTAINS;
+                        synonymMatched = true;
+                        if (!matchedFields.includes(SEARCHABLE_FIELDS.DESCRIPTION)) {
+                            matchedFields.push(SEARCHABLE_FIELDS.DESCRIPTION);
+                        }
+                        break; // Only count first matching synonym
+                    }
+                }
+            }
+        }
+
         // Thread type bonus
         if ((keyword === 'fe' || keyword === 'fi' || keyword.includes('filet')) && /\b(FE|FI|filet)\b/i.test(description)) {
             totalScore += SEARCH_SCORES.THREAD_BONUS;
@@ -184,11 +344,22 @@ function calculateScore(product: Product, keywords: string[]): {
             }
         }
 
-        // Description matching
+        // Description matching (original keyword)
+        // Use word boundary matching for better accuracy, especially for colors
+        const wordBoundaryRegex = new RegExp(`\\b${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+        const hasWordBoundaryMatch = wordBoundaryRegex.test(description);
+        
         if (description.startsWith(keyword)) {
             totalScore += SEARCH_SCORES.DESCRIPTION_STARTS;
             keywordMatched = true;
             if (matchType === 'contains') matchType = 'start';
+            if (!matchedFields.includes(SEARCHABLE_FIELDS.DESCRIPTION)) {
+                matchedFields.push(SEARCHABLE_FIELDS.DESCRIPTION);
+            }
+        } else if (hasWordBoundaryMatch) {
+            // Word boundary match gets higher score than simple contains
+            totalScore += SEARCH_SCORES.DESCRIPTION_CONTAINS + 10;
+            keywordMatched = true;
             if (!matchedFields.includes(SEARCHABLE_FIELDS.DESCRIPTION)) {
                 matchedFields.push(SEARCHABLE_FIELDS.DESCRIPTION);
             }
@@ -217,7 +388,7 @@ function calculateScore(product: Product, keywords: string[]): {
             }
         }
 
-        if (keywordMatched && !matchedKeywords.includes(keyword)) {
+        if ((keywordMatched || synonymMatched) && !matchedKeywords.includes(keyword)) {
             matchedKeywords.push(keyword);
         }
     }

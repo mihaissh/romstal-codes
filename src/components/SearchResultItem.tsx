@@ -1,9 +1,8 @@
-import { memo, useMemo, useCallback } from "react";
+import { memo, useMemo, useCallback, useState } from "react";
 import type { Product } from "../types/Product";
 import { highlightTextWithDiameters } from "../utils/highlightUtils";
 import HighlightedText from "./HighlightedText";
 import { HashtagIcon, CheckIcon } from "@heroicons/react/24/outline";
-import { useState } from "react";
 
 interface Props {
     product: Product;
