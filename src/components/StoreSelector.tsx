@@ -3,7 +3,6 @@ import { ChevronDown } from "lucide-react";
 import { useClickOutside } from "../hooks/useClickOutside";
 
 type StoreCode = "1BN1" | "1BV1";
-
 const STORES: StoreCode[] = ["1BN1", "1BV1"];
 
 interface StoreSelectorProps {
@@ -11,51 +10,32 @@ interface StoreSelectorProps {
     onStoreSelect: (storeCode: StoreCode) => void;
 }
 
-const StoreSelector = memo(function StoreSelector({
-    currentStore,
-    onStoreSelect,
-}: StoreSelectorProps) {
+const StoreSelector = memo(function StoreSelector({ currentStore, onStoreSelect }: StoreSelectorProps) {
     const [isOpen, setIsOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
-
     useClickOutside(containerRef, useCallback(() => setIsOpen(false), []));
-
-    const handleStoreClick = (storeCode: StoreCode) => {
-        if (storeCode !== currentStore) {
-            onStoreSelect(storeCode);
-        }
-        setIsOpen(false);
-    };
 
     return (
         <div className="relative" ref={containerRef}>
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="px-3 sm:px-4 py-3 sm:py-4 md:py-6 rounded-2xl border-2 border-slate-700/50 bg-slate-800/60 backdrop-blur-md text-slate-100 font-semibold text-xs sm:text-sm md:text-base shadow-2xl shadow-black/30 transition-all duration-300 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/40 hover:border-slate-600/70 hover:bg-slate-800/70 whitespace-nowrap min-w-[70px] sm:min-w-[80px] md:min-w-[100px]"
+                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-surface-2 border border-border text-sm font-semibold text-zinc-200 hover:bg-surface-3 hover:border-border-hover transition-colors"
             >
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                 {currentStore}
-                <ChevronDown
-                    size={16}
-                    className={`inline-block ml-2 text-slate-400 transition-transform duration-200 ${
-                        isOpen ? "rotate-180" : ""
-                    }`}
-                />
+                <ChevronDown size={14} className={`text-zinc-500 transition-transform duration-150 ${isOpen ? "rotate-180" : ""}`} />
             </button>
-
-            {/* Dropdown Menu */}
             {isOpen && (
-                <div className="absolute top-full mt-2 right-0 bg-slate-800 border border-slate-700 rounded-lg shadow-2xl z-50 overflow-hidden min-w-[80px]">
-                    {STORES.map((storeCode) => (
+                <div className="absolute top-full mt-1 left-0 bg-surface-2 border border-border rounded-lg shadow-xl shadow-black/40 z-50 overflow-hidden min-w-[80px] animate-scale-in">
+                    {STORES.map(code => (
                         <button
-                            key={storeCode}
-                            onClick={() => handleStoreClick(storeCode)}
-                            className={`w-full px-4 py-3 text-center hover:bg-slate-700/50 transition-colors text-sm font-semibold ${
-                                storeCode === currentStore
-                                    ? "bg-slate-700/30 text-slate-100"
-                                    : "text-slate-100"
-                            } ${storeCode !== STORES[STORES.length - 1] ? "border-b border-slate-700" : ""}`}
+                            key={code}
+                            onClick={() => { onStoreSelect(code); setIsOpen(false); }}
+                            className={`w-full px-4 py-2.5 text-left text-sm font-medium transition-colors ${
+                                code === currentStore ? "text-amber-400 bg-accent-dim" : "text-zinc-300 hover:bg-surface-3"
+                            }`}
                         >
-                            {storeCode}
+                            {code}
                         </button>
                     ))}
                 </div>

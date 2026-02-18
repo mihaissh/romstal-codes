@@ -40,7 +40,7 @@ export function useSearchHistory(storeCode: string) {
 
   const addToHistory = (product: Product) => {
     setHistoryItems((prev) => {
-      const filtered = prev.filter((item) => item.product.Material !== product.Material);
+      const filtered = prev.filter((item) => item.product.code !== product.code);
       const newItem: HistoryItem = {
         product,
         timestamp: Date.now()
@@ -49,8 +49,8 @@ export function useSearchHistory(storeCode: string) {
     });
   };
 
-  const removeFromHistory = (materialCode: string) => {
-    setHistoryItems((prev) => prev.filter((item) => item.product.Material !== materialCode));
+  const removeFromHistory = (productCode: string) => {
+    setHistoryItems((prev) => prev.filter((item) => item.product.code !== productCode));
   };
 
   const clearHistory = () => {
