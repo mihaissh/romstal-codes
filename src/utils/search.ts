@@ -31,9 +31,9 @@ function normalize(text: string): string {
 // Maps short forms to all equivalent terms they should match
 const ALIASES: Record<string, string[]> = {
     // Materials
-    'pp':           ['ppr', 'polipropilena'],
-    'ppr':          ['pp'],
-    'polipropilena':['pp', 'ppr'],
+    // NOTE: PP is only a short name for polipropilena (PPR stays separate)
+    'pp':           ['polipropilena'],
+    'polipropilena':['pp'],
     'cu':           ['cupru'],
     'cupru':        ['cu'],
     'inx':          ['inox'],
@@ -42,6 +42,10 @@ const ALIASES: Record<string, string[]> = {
     'alama':        ['al'],
     'brz':          ['bronz'],
     'bronz':        ['brz'],
+    // Brands (Robineti)
+    'rsl':          ['romstal', 'rsl500'],
+    'romstal':      ['rsl', 'rsl500'],
+    'rsl500':       ['rsl', 'romstal'],
     // Fittings
     'rob':          ['robinet'],
     'red':          ['reductie'],

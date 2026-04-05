@@ -5,14 +5,14 @@ import SearchHistory from "./components/SearchHistory";
 import Header from "./components/Header";
 import StoreSelector from "./components/StoreSelector";
 import StorageSelector, { type StorageLocation } from "./components/StorageSelector";
-import CategoryFilter from "./components/CategoryFilter";
+
 import { useSearchHistory } from "./hooks/useSearchHistory";
 import products1bn1Deposit from "./stoc_1bn1_deposit.json";
 import products1bn1Expo from "./stoc_1bn1_expo.json";
 import products1bv1Deposit from "./stoc_1bv1_deposit.json";
 import products1bv1Expo from "./stoc_1bv1_expo.json";
 import type { Product } from "./types/Product";
-import { buildIndex, clearIndex, getCategories } from "./utils/search";
+import { buildIndex, clearIndex } from "./utils/search";
 
 type StoreCode = "1BN1" | "1BV1";
 
@@ -21,8 +21,6 @@ export default function App() {
     const [selected, setSelected] = useState<Product | null>(null);
     const [currentStore, setCurrentStore] = useState<StoreCode>("1BN1");
     const [currentStorage, setCurrentStorage] = useState<StorageLocation>("deposit");
-    const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-
     const availableStorages = useMemo<StorageLocation[]>(() =>
         currentStore === "1BV1" ? ["deposit", "expo"] : ["deposit"],
     [currentStore]);
@@ -45,8 +43,6 @@ export default function App() {
         return () => clearIndex();
     }, [products]);
 
-    const categories = useMemo(() => getCategories(products), [products]);
-
     const handleSelectProduct = (product: Product) => {
         setSelected(product);
         addToHistory(product);
@@ -58,7 +54,6 @@ export default function App() {
         setSelected(null);
         setQuery("");
         setCurrentStorage("deposit");
-        setSelectedCategory(null);
         clearIndex();
     };
 
@@ -67,7 +62,6 @@ export default function App() {
         setCurrentStorage(storage);
         setSelected(null);
         setQuery("");
-        setSelectedCategory(null);
         clearIndex();
     };
 
@@ -86,10 +80,9 @@ export default function App() {
                 {/* Divider */}
                 <div className="h-px bg-border mb-5" />
 
-                {/* Search + Filters */}
-                <div className="space-y-3 mb-6">
-                    <SearchBar query={query} onChange={setQuery} products={products} onSelect={handleSelectProduct} category={selectedCategory} />
-                    <CategoryFilter categories={categories} selected={selectedCategory} onSelect={setSelectedCategory} />
+                {/* Search */}
+                <div className="mb-6">
+                    <SearchBar query={query} onChange={setQuery} products={products} onSelect={handleSelectProduct} category={null} />
                 </div>
 
                 {/* Product detail */}

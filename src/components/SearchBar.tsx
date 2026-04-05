@@ -46,11 +46,10 @@ function SearchBarComponent({ query, onChange, products, onSelect, category }: P
     }, [selectedIndex]);
 
     const handleSelect = useCallback((product: Product) => {
-        onChange(product.code);
         onSelect(product);
         setOpen(false);
         setSelectedIndex(-1);
-    }, [onChange, onSelect]);
+    }, [onSelect]);
 
     const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
         if (!open || allProducts.length === 0) return;
@@ -159,11 +158,22 @@ interface RowProps {
 }
 
 const Row = memo(function Row({ product, isSelected, onClick, highlight }: RowProps) {
+    const [copied, setCopied] = useState(false);
+
+    const handleCopy = async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        try {
+            await navigator.clipboard.writeText(product.code);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 1200);
+        } catch { /* noop */ }
+    };
+
     return (
         <div
             data-item
             onClick={onClick}
-            className={`px-3 py-2.5 flex items-center gap-3 cursor-pointer transition-colors duration-75 ${
+            className={`px-3 py-2.5 flex items-center gap-2 cursor-pointer transition-colors duration-75 ${
                 isSelected ? 'bg-surface-3' : 'hover:bg-surface-3/50'
             }`}
         >
@@ -178,6 +188,16 @@ const Row = memo(function Row({ product, isSelected, onClick, highlight }: RowPr
             <code className="flex-shrink-0 text-xs font-mono text-amber-400/80 bg-amber-500/8 px-2 py-0.5 rounded">
                 {product.code}
             </code>
+            <button
+                onClick={handleCopy}
+                className={`flex-shrink-0 px-2 py-1 rounded-md text-[11px] font-medium transition-colors ${
+                    copied
+                        ? 'text-emerald-400 bg-emerald-500/10'
+                        : 'text-zinc-600 hover:text-zinc-300 hover:bg-surface-3'
+                }`}
+            >
+                {copied ? 'Copiat!' : 'Copy'}
+            </button>
         </div>
     );
 });
