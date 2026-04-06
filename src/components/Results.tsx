@@ -1,5 +1,14 @@
 import { useState, memo } from "react";
-import type { Product } from "../types/Product";
+import { Copy, Check, X } from "lucide-react";
+import type { Product } from "@/types/Product";
+import { Button } from "@/components/ui/button";
+import {
+    Card,
+    CardHeader,
+    CardTitle,
+    CardAction,
+    CardContent,
+} from "@/components/ui/card";
 
 interface Props {
     product: Product;
@@ -17,77 +26,88 @@ function ResultsComponent({ product, onClear }: Props) {
         } catch { /* noop */ }
     };
 
-    const tags = [
-        product.category !== 'Altele' ? product.category : null,
-        product.productMaterial,
-        product.color,
-        product.dimensions?.diameter ? `⌀${product.dimensions.diameter}` : null,
-        product.dimensions?.angle ? `${product.dimensions.angle}°` : null,
-        ...(product.dimensions?.threadSize?.map(t => `${t}"`) || []),
-    ].filter(Boolean);
+    type Tag = { label: string; cls: string };
+    const tags: Tag[] = [];
+
+    if (product.category !== 'Altele')
+        tags.push({ label: product.category, cls: "bg-tag-category-bg text-tag-category-text" });
+    if (product.productMaterial)
+        tags.push({ label: product.productMaterial, cls: "bg-tag-material-bg text-tag-material-text" });
+    if (product.color)
+        tags.push({ label: product.color, cls: "bg-tag-color-bg text-tag-color-text" });
+    if (product.dimensions?.diameter)
+        tags.push({ label: `⌀ ${product.dimensions.diameter}mm`, cls: "bg-tag-dimension-bg text-tag-dimension-text" });
+    if (product.dimensions?.angle)
+        tags.push({ label: `${product.dimensions.angle}°`, cls: "bg-tag-dimension-bg text-tag-dimension-text" });
+    if (product.dimensions?.threadSize)
+        product.dimensions.threadSize.forEach(t =>
+            tags.push({ label: `${t}"`, cls: "bg-tag-dimension-bg text-tag-dimension-text" }));
 
     return (
-        <div className="rounded-xl bg-surface-2 border border-border overflow-hidden animate-fade-up">
-            {/* Top bar */}
-            <div className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-surface">
-                <span className="text-xs text-zinc-600 font-medium">Detalii produs</span>
-                <button
-                    onClick={onClear}
-                    className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors px-2 py-1 rounded hover:bg-surface-3"
-                >
-                    Inchide
-                </button>
-            </div>
-
-            <div className="p-5 sm:p-6 space-y-5">
-                {/* Product name */}
-                <h2 className="text-lg sm:text-xl font-semibold text-zinc-100 leading-snug">
+        <Card className="animate-fade-up overflow-visible">
+            <CardHeader className="pb-0">
+                <CardTitle className="text-xl sm:text-2xl font-bold tracking-[-0.02em] leading-snug">
                     {product.name}
-                </h2>
+                </CardTitle>
+                <CardAction>
+                    <Button variant="ghost" size="icon-sm" onClick={onClear} className="rounded-full">
+                        <X className="size-4" />
+                    </Button>
+                </CardAction>
+            </CardHeader>
 
-                {/* Code + Copy */}
+            <CardContent className="space-y-5 pt-2">
+                {/* Code block */}
                 <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2 bg-surface border border-border rounded-lg px-4 py-2.5">
-                        <span className="text-xs text-zinc-500 font-medium">COD</span>
-                        <code className="font-mono text-lg font-bold text-amber-400">{product.code}</code>
+                    <div className="flex items-center gap-3 bg-tag-code-bg rounded-lg px-5 py-3">
+                        <span className="text-[9px] font-mono font-bold text-tag-code-text/50 uppercase tracking-[0.2em]">Cod</span>
+                        <code className="font-mono text-xl font-extrabold text-tag-code-text tracking-wider">{product.code}</code>
                     </div>
-                    <button
+                    <Button
+                        variant="outline"
+                        size="default"
                         onClick={handleCopy}
-                        className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
-                            copied
-                                ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
-                                : "bg-surface border border-border text-zinc-300 hover:bg-surface-3 hover:border-border-hover"
-                        }`}
+                        className={`gap-2 transition-all ${copied ? "border-chart-2/30 text-chart-2" : ""}`}
                     >
+                        {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
                         {copied ? "Copiat!" : "Copiaza"}
-                    </button>
+                    </Button>
                 </div>
 
                 {/* Tags */}
                 {tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5">
+                    <div className="flex flex-wrap gap-2">
                         {tags.map((tag, i) => (
-                            <span key={i} className="px-2.5 py-1 rounded-md text-xs font-medium bg-surface border border-border text-zinc-400">
-                                {tag}
+                            <span
+                                key={i}
+                                style={{ animationDelay: `${i * 40 + 100}ms` }}
+                                className={`inline-flex px-3 py-1.5 rounded-md text-xs font-semibold animate-entry ${tag.cls}`}
+                            >
+                                {tag.label}
                             </span>
                         ))}
                     </div>
                 )}
 
-                {/* Info */}
+                {/* Info grid */}
                 <div className="grid grid-cols-2 gap-3">
-                    <div className="p-3.5 rounded-lg bg-surface border border-border">
-                        <p className="text-[10px] text-zinc-600 uppercase tracking-wider font-bold mb-1">Depozitare</p>
-                        <p className="text-sm text-zinc-300 font-medium">{product.storage}</p>
-                        <p className="text-xs text-zinc-500 mt-0.5">{product.storageDesc}</p>
-                    </div>
-                    <div className="p-3.5 rounded-lg bg-surface border border-border">
-                        <p className="text-[10px] text-zinc-600 uppercase tracking-wider font-bold mb-1">Magazin</p>
-                        <p className="text-sm text-zinc-300 font-medium">{product.store}</p>
-                        <p className="text-xs text-zinc-500 mt-0.5">{product.storeName}</p>
-                    </div>
+                    <InfoBlock label="Depozitare" value={product.storage} sub={product.storageDesc} delay={200} />
+                    <InfoBlock label="Magazin" value={product.store} sub={product.storeName} delay={260} />
                 </div>
-            </div>
+            </CardContent>
+        </Card>
+    );
+}
+
+function InfoBlock({ label, value, sub, delay }: { label: string; value: string; sub: string; delay: number }) {
+    return (
+        <div
+            style={{ animationDelay: `${delay}ms` }}
+            className="p-4 rounded-lg bg-muted/60 border border-border/50 animate-entry"
+        >
+            <p className="text-[9px] font-mono font-bold text-muted-foreground/60 uppercase tracking-[0.2em] mb-1">{label}</p>
+            <p className="text-base font-bold text-foreground tracking-tight">{value}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>
         </div>
     );
 }
