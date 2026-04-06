@@ -78,6 +78,43 @@ function expandToken(token: string): string[] {
     return aliases ? [token, ...aliases] : [token];
 }
 
+/**
+ * Levenshtein edit distance — how many single-char edits to turn a into b
+ */
+function editDistance(a: string, b: string): number {
+    if (a.length === 0) return b.length;
+    if (b.length === 0) return a.length;
+    const matrix: number[][] = [];
+    for (let i = 0; i <= a.length; i++) matrix[i] = [i];
+    for (let j = 0; j <= b.length; j++) matrix[0][j] = j;
+    for (let i = 1; i <= a.length; i++) {
+        for (let j = 1; j <= b.length; j++) {
+            const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+            matrix[i][j] = Math.min(
+                matrix[i - 1][j] + 1,
+                matrix[i][j - 1] + 1,
+                matrix[i - 1][j - 1] + cost,
+            );
+        }
+    }
+    return matrix[a.length][b.length];
+}
+
+/**
+ * Find indexed tokens that are within maxDist edits of the query term.
+ * Returns matching product indices.
+ */
+function fuzzyMatchToken(term: string, maxDist: number): Set<number> {
+    const matches = new Set<number>();
+    tokenMap.forEach((productIndices, token) => {
+        if (Math.abs(token.length - term.length) > maxDist) return;
+        if (editDistance(term, token) <= maxDist) {
+            productIndices.forEach(idx => matches.add(idx));
+        }
+    });
+    return matches;
+}
+
 export function buildIndex(products: Product[]): void {
     tokenMap.clear();
     codePrefixMap.clear();
@@ -153,9 +190,11 @@ function searchByTokens(
     if (queryTokens.length === 0) return [];
 
     // For each query token, find matching product indices
-    // Expand each token with its aliases (pp → ppr, polipropilena, etc.)
+    // Expand each token with its aliases, then prefix match, then fuzzy fallback
     const matchSets: Set<number>[] = queryTokens.map(qt => {
         const matches = new Set<number>();
+
+        // First try alias expansion on the raw token
         const expanded = expandToken(qt);
 
         for (const term of expanded) {
@@ -182,6 +221,21 @@ function searchByTokens(
                     productIndices.forEach(idx => matches.add(idx));
                 }
             });
+        }
+
+        // Fuzzy fallback: if no matches yet and token is long enough, try edit distance
+        if (matches.size === 0 && qt.length >= 3) {
+            const maxDist = qt.length <= 4 ? 1 : 2;
+            const fuzzy = fuzzyMatchToken(qt, maxDist);
+            fuzzy.forEach(idx => matches.add(idx));
+
+            // Also try fuzzy on alias-expanded terms
+            if (fuzzy.size === 0) {
+                for (const term of expanded) {
+                    if (term === qt) continue;
+                    fuzzyMatchToken(term, maxDist).forEach(idx => matches.add(idx));
+                }
+            }
         }
 
         return matches;
