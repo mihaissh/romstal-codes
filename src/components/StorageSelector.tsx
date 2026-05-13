@@ -36,7 +36,7 @@ const StorageSelector = memo(function StorageSelector({ currentStorage, onStorag
                 {availableStorages.map(storage => (
                     <DropdownMenuItem
                         key={storage}
-                        onSelect={() => onStorageSelect(storage)}
+                        onClick={() => onStorageSelect(storage)}
                         className={storage === currentStorage ? "font-semibold text-primary" : ""}
                     >
                         {LABELS[storage]}
