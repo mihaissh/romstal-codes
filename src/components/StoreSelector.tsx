@@ -30,7 +30,7 @@ const StoreSelector = memo(function StoreSelector({ currentStore, onStoreSelect 
                 {STORES.map(code => (
                     <DropdownMenuItem
                         key={code}
-                        onSelect={() => onStoreSelect(code)}
+                        onClick={() => onStoreSelect(code)}
                         className={`font-mono tracking-wider ${code === currentStore ? "font-bold text-primary" : ""}`}
                     >
                         {code}
