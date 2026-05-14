@@ -3,10 +3,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 import {
-    Tooltip,
-    TooltipContent,
     TooltipProvider,
-    TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
     DropdownMenu,
@@ -158,19 +155,19 @@ export default function Header({ theme, onToggleTheme, view, onViewChange, user,
                             <span className="hidden sm:inline">Note</span>
                         </button>
                     ) : (
-                        <Tooltip>
-                            <TooltipTrigger>
-                                <button
-                                    className="flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-[11px] font-mono uppercase tracking-wider transition-all opacity-40 grayscale cursor-not-allowed bg-repeating-linear-gradient"
-                                >
-                                    <Lock className="size-3.5" />
-                                    <span className="hidden sm:inline">Note</span>
-                                </button>
-                            </TooltipTrigger>
-                            <TooltipContent side="bottom" className="font-mono text-[10px] uppercase tracking-widest">
+                        <div className="flex-1 relative group">
+                            <button
+                                disabled
+                                className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-[11px] font-mono uppercase tracking-wider transition-all opacity-40 grayscale cursor-not-allowed bg-repeating-linear-gradient"
+                            >
+                                <Lock className="size-3.5" />
+                                <span className="hidden sm:inline">Note</span>
+                            </button>
+                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-50 bg-foreground text-background text-[10px] font-mono uppercase tracking-widest px-3 py-1.5 rounded-md whitespace-nowrap shadow-xl">
                                 In lucru / Login necesar
-                            </TooltipContent>
-                        </Tooltip>
+                                <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-foreground" />
+                            </div>
+                        </div>
                     )}
                 </div>
             </header>
