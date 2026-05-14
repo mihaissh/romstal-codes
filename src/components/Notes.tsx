@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNotes, type Note, type NoteTag } from "@/hooks/useNotes";
+import { useAuth } from "@/hooks/useAuth";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent, CardAction } from "@/components/ui/card";
-import { Trash2, Plus, StickyNote, Edit2, X, Check, Phone } from "lucide-react";
+import { Trash2, Plus, StickyNote, Edit2, X, Check, Phone, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const AVAILABLE_TAGS: NoteTag[] = ["platit", "neplatit", "livrare curier", "livrare marfa", "ridica client", "SPEDEX"];
@@ -20,7 +21,9 @@ const TAG_COLORS: Record<NoteTag, string> = {
 
 export default function Notes() {
     const { notes, loading, addNote, updateNote, deleteNote, clearNotes } = useNotes();
+    const { user } = useAuth();
     const [showModal, setShowModal] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     
     // Form state
     const [nume, setNume] = useState("");
@@ -31,9 +34,20 @@ export default function Notes() {
     const [selectedTags, setSelectedTags] = useState<NoteTag[]>([]);
     const [editingId, setEditingId] = useState<string | null>(null);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    // Reset error when modal opens/closes
+    useEffect(() => {
+        if (!showModal) setError(null);
+    }, [showModal]);
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!nume || !client || !orderOrInvoice) return;
+        setError(null);
+
+        if (!user) {
+            setError("Trebuie sa fii autentificat pentru a adauga note.");
+            return;
+        }
 
         const noteData = {
             nume,
@@ -44,13 +58,17 @@ export default function Notes() {
             tags: selectedTags,
         };
 
-        if (editingId) {
-            updateNote(editingId, noteData);
-        } else {
-            addNote(noteData);
+        try {
+            if (editingId) {
+                await updateNote(editingId, noteData);
+            } else {
+                await addNote(noteData);
+            }
+            closeModal();
+        } catch (err: any) {
+            console.error("Note operation error:", err);
+            setError(err.message || "A aparut o eroare la salvarea notei.");
         }
-
-        closeModal();
     };
 
     const openModal = (note?: Note) => {
@@ -217,6 +235,13 @@ export default function Notes() {
                                         className="min-h-[120px] resize-none"
                                     />
                                 </div>
+
+                                {error && (
+                                    <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-xs animate-shake">
+                                        <AlertCircle className="size-4 shrink-0" />
+                                        <p>{error}</p>
+                                    </div>
+                                )}
 
                                 <div className="flex gap-3 pt-2">
                                     <Button variant="outline" type="button" onClick={closeModal} className="flex-1">
