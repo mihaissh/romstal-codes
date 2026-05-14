@@ -49,7 +49,7 @@ export default function Stoc() {
                                 <div className="size-8 rounded bg-primary/10 flex items-center justify-center font-bold text-primary text-xs">BN</div>
                                 <div>
                                     <p className="text-xs font-bold">1BN1 - Deposit</p>
-                                    <p className="text-[10px] text-muted-foreground">Baneasa</p>
+                                    <p className="text-[10px] text-muted-foreground">Bran</p>
                                 </div>
                             </div>
                             <Badge variant="outline">34,521 items</Badge>
