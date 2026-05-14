@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Package, ArrowUpRight, ArrowDownRight, Search } from "lucide-react";
+import { Package, ArrowUpRight, Search } from "lucide-react";
 
 export default function Stoc() {
     // This is a placeholder for the Stoc page

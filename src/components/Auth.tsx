@@ -21,7 +21,7 @@ export default function Auth({ onClose }: Props) {
         setError(null);
 
         try {
-            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+            const { error } = await supabase.auth.signInWithPassword({ email, password });
 
             if (error) {
                 console.error("Login error details:", error);
