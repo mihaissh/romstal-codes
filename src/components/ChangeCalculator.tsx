@@ -226,42 +226,35 @@ function ResultPanel({ result }: { result: Result }) {
             </div>
 
             {breakdown.length > 0 && (
-                <div className="space-y-3">
+                <div className="space-y-2">
                     <div className="text-[10px] font-mono font-bold text-muted-foreground/60 uppercase tracking-widest px-1">
                         Bancnote si monede:
                     </div>
-                    <div className="grid grid-cols-1 gap-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                         {breakdown.map((item, i) => (
                             <div 
                                 key={item.value} 
-                                className="bg-card/40 border border-border rounded-2xl p-4 flex items-center gap-6 animate-fade-up"
+                                className="bg-card/40 border border-border rounded-xl p-2 flex flex-col items-center text-center animate-fade-up"
                                 style={{ animationDelay: `${(i + 1) * 50}ms` }}
                             >
-                                <div className="relative flex-shrink-0 w-32 sm:w-40 aspect-[2/1] flex items-center justify-center bg-muted/20 rounded-xl overflow-hidden shadow-sm">
+                                <div className="relative w-full aspect-[2/1] mb-1.5 flex items-center justify-center bg-muted/20 rounded-lg overflow-hidden shadow-sm group">
                                     {item.image ? (
                                         <img 
                                             src={item.image} 
                                             alt={item.label} 
-                                            className="w-full h-full object-contain hover:scale-110 transition-transform duration-500"
+                                            className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-110"
                                         />
                                     ) : (
                                         <div className="text-[10px] font-mono text-muted-foreground/40 uppercase">
                                             {item.label}
                                         </div>
                                     )}
-                                </div>
-                                <div className="flex-1 flex items-center justify-between">
-                                    <div className="space-y-1">
-                                        <div className="text-lg font-bold text-foreground">
-                                            {item.label}
-                                        </div>
-                                        <div className="text-xs font-mono text-muted-foreground uppercase tracking-wider">
-                                            {item.count} {item.count === 1 ? 'bucata' : 'bucati'}
-                                        </div>
-                                    </div>
-                                    <div className="text-3xl font-black text-primary/20 font-mono">
+                                    <div className="absolute -top-0.5 -right-0.5 bg-primary text-primary-foreground text-[10px] font-black px-1.5 py-0.5 rounded-bl-lg rounded-tr-lg shadow-sm">
                                         x{item.count}
                                     </div>
+                                </div>
+                                <div className="text-[9px] font-mono font-bold uppercase tracking-tighter text-muted-foreground truncate w-full">
+                                    {item.label}
                                 </div>
                             </div>
                         ))}
