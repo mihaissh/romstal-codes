@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Trash2, Plus, StickyNote, Edit2, X, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const AVAILABLE_TAGS: NoteTag[] = ["platit", "neplatit", "livrare curier", "livrare marfa", "ridica client"];
+const AVAILABLE_TAGS: NoteTag[] = ["platit", "neplatit", "livrare curier", "livrare marfa", "ridica client", "SPEDEX"];
 
 const TAG_COLORS: Record<NoteTag, string> = {
     "platit": "bg-tag-category-bg text-tag-category-text border-tag-category-text/20",
@@ -15,6 +15,7 @@ const TAG_COLORS: Record<NoteTag, string> = {
     "livrare curier": "bg-tag-material-bg text-tag-material-text border-tag-material-text/20",
     "livrare marfa": "bg-tag-material-bg text-tag-material-text border-tag-material-text/20",
     "ridica client": "bg-tag-dimension-bg text-tag-dimension-text border-tag-dimension-text/20",
+    "SPEDEX": "bg-primary text-primary-foreground border-primary/20",
 };
 
 export default function Notes() {
