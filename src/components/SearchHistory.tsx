@@ -41,7 +41,7 @@ function SearchHistoryComponent({ history, historyItems, onSelectProduct, onDele
                     const p = item.product;
                     return (
                         <div
-                            key={p.code}
+                            key={`${p.code}-${p.store}-${p.storage}`}
                             onClick={() => onSelectProduct(p)}
                             style={{ animationDelay: `${i * 40 + 200}ms` }}
                             className="group relative flex items-center gap-3 p-3.5 rounded-lg bg-card border border-border hover:border-primary/20 cursor-pointer transition-all duration-200 hover:shadow-md hover:shadow-primary/5 animate-entry"

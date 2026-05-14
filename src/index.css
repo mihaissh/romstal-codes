@@ -50,6 +50,13 @@
     --radius-3xl: calc(var(--radius) * 2.2);
     --radius-4xl: calc(var(--radius) * 2.6);
 
+    --theme-transition: background-color 0.5s ease-in-out, 
+                        color 0.5s ease-in-out, 
+                        border-color 0.5s ease-in-out, 
+                        box-shadow 0.5s ease-in-out,
+                        fill 0.5s ease-in-out,
+                        stroke 0.5s ease-in-out;
+
     /* Semantic tag colors */
     --color-tag-code-bg: var(--tag-code-bg);
     --color-tag-code-text: var(--tag-code-text);
@@ -64,40 +71,40 @@
     --color-highlight: var(--highlight);
 }
 
-/* ─── LIGHT THEME: Warm Stone ─── */
+/* ─── LIGHT THEME: Soft Warm Stone (No Flashbang) ─── */
 :root {
-    --background: oklch(0.93 0.008 70);
+    --background: oklch(0.95 0.01 70); /* Soft off-white, warm tone */
     --foreground: oklch(0.2 0.02 55);
-    --card: oklch(0.95 0.006 70);
+    --card: oklch(0.97 0.005 70);
     --card-foreground: oklch(0.2 0.02 55);
-    --popover: oklch(0.95 0.006 70);
+    --popover: oklch(0.97 0.005 70);
     --popover-foreground: oklch(0.2 0.02 55);
-    --primary: oklch(0.42 0.11 55);
-    --primary-foreground: oklch(0.96 0.005 70);
-    --secondary: oklch(0.9 0.01 70);
+    --primary: oklch(0.5 0.18 25); /* Vibrant Romstal Red */
+    --primary-foreground: oklch(0.98 0.005 70);
+    --secondary: oklch(0.92 0.01 70);
     --secondary-foreground: oklch(0.25 0.02 55);
-    --muted: oklch(0.89 0.009 70);
+    --muted: oklch(0.9 0.01 70);
     --muted-foreground: oklch(0.45 0.02 55);
-    --accent: oklch(0.89 0.015 55);
-    --accent-foreground: oklch(0.22 0.03 55);
+    --accent: oklch(0.92 0.02 25);
+    --accent-foreground: oklch(0.35 0.15 25);
     --destructive: oklch(0.55 0.22 25);
-    --border: oklch(0.84 0.012 70);
-    --input: oklch(0.84 0.012 70);
-    --ring: oklch(0.55 0.1 55);
-    --radius: 0.5rem;
+    --border: oklch(0.86 0.01 70);
+    --input: oklch(0.86 0.01 70);
+    --ring: oklch(0.5 0.18 25);
+    --radius: 0.6rem;
 
-    /* Tag semantic colors — Light */
-    --tag-code-bg: oklch(0.88 0.05 55);
+    /* Tag semantic colors — Light (Vibrant but balanced) */
+    --tag-code-bg: oklch(0.9 0.04 55);
     --tag-code-text: oklch(0.35 0.1 55);
-    --tag-category-bg: oklch(0.89 0.04 155);
-    --tag-category-text: oklch(0.32 0.08 155);
-    --tag-material-bg: oklch(0.88 0.04 230);
-    --tag-material-text: oklch(0.35 0.09 230);
-    --tag-color-bg: oklch(0.89 0.04 340);
-    --tag-color-text: oklch(0.37 0.1 340);
-    --tag-dimension-bg: oklch(0.88 0.04 70);
-    --tag-dimension-text: oklch(0.37 0.1 70);
-    --highlight: oklch(0.42 0.12 55);
+    --tag-category-bg: oklch(0.92 0.06 155);
+    --tag-category-text: oklch(0.3 0.12 155);
+    --tag-material-bg: oklch(0.9 0.06 240);
+    --tag-material-text: oklch(0.3 0.15 240);
+    --tag-color-bg: oklch(0.92 0.06 20);
+    --tag-color-text: oklch(0.35 0.15 20);
+    --tag-dimension-bg: oklch(0.92 0.08 85);
+    --tag-dimension-text: oklch(0.35 0.15 85);
+    --highlight: oklch(0.5 0.18 25);
 
     --chart-1: oklch(0.62 0.14 55);
     --chart-2: oklch(0.62 0.1 155);
@@ -114,40 +121,40 @@
     --sidebar-ring: oklch(0.55 0.1 55);
 }
 
-/* ─── DARK THEME: Warm Workshop ─── */
+/* ─── DARK THEME: Vibrant Workshop ─── */
 .dark {
-    --background: oklch(0.2 0.012 55);
-    --foreground: oklch(0.91 0.015 70);
-    --card: oklch(0.24 0.012 55);
-    --card-foreground: oklch(0.91 0.015 70);
-    --popover: oklch(0.24 0.012 55);
-    --popover-foreground: oklch(0.91 0.015 70);
-    --primary: oklch(0.75 0.14 65);
-    --primary-foreground: oklch(0.18 0.015 55);
-    --secondary: oklch(0.28 0.015 55);
-    --secondary-foreground: oklch(0.88 0.01 70);
-    --muted: oklch(0.27 0.012 55);
-    --muted-foreground: oklch(0.58 0.02 65);
-    --accent: oklch(0.29 0.02 55);
-    --accent-foreground: oklch(0.88 0.01 70);
+    --background: oklch(0.22 0.015 55); /* Warm workshop dark, slightly deeper */
+    --foreground: oklch(0.94 0.015 70);
+    --card: oklch(0.26 0.015 55);
+    --card-foreground: oklch(0.94 0.015 70);
+    --popover: oklch(0.26 0.015 55);
+    --popover-foreground: oklch(0.94 0.015 70);
+    --primary: oklch(0.7 0.18 65); /* More vibrant Romstal Red for Dark */
+    --primary-foreground: oklch(0.15 0.015 55);
+    --secondary: oklch(0.3 0.02 55);
+    --secondary-foreground: oklch(0.9 0.015 70);
+    --muted: oklch(0.28 0.015 55);
+    --muted-foreground: oklch(0.65 0.02 65);
+    --accent: oklch(0.32 0.03 55);
+    --accent-foreground: oklch(0.92 0.015 70);
     --destructive: oklch(0.65 0.2 25);
-    --border: oklch(0.32 0.015 55);
-    --input: oklch(0.32 0.015 55);
-    --ring: oklch(0.65 0.12 65);
-    --radius: 0.5rem;
+    --border: oklch(0.34 0.02 55);
+    --input: oklch(0.34 0.02 55);
+    --ring: oklch(0.7 0.18 65);
+    --radius: 0.6rem;
 
-    /* Tag semantic colors — Dark */
-    --tag-code-bg: oklch(0.3 0.04 55);
-    --tag-code-text: oklch(0.82 0.12 65);
-    --tag-category-bg: oklch(0.29 0.035 155);
-    --tag-category-text: oklch(0.78 0.1 155);
-    --tag-material-bg: oklch(0.29 0.035 230);
-    --tag-material-text: oklch(0.78 0.1 230);
-    --tag-color-bg: oklch(0.29 0.035 340);
-    --tag-color-text: oklch(0.78 0.08 340);
-    --tag-dimension-bg: oklch(0.29 0.035 70);
-    --tag-dimension-text: oklch(0.78 0.1 70);
-    --highlight: oklch(0.82 0.14 65);
+    /* Tag semantic colors — Dark (Vibrant & Punchy) */
+    --tag-code-bg: oklch(0.35 0.06 55);
+    --tag-code-text: oklch(0.85 0.12 65);
+    --tag-category-bg: oklch(0.32 0.08 155);
+    --tag-category-text: oklch(0.85 0.12 155);
+    --tag-material-bg: oklch(0.32 0.08 240);
+    --tag-material-text: oklch(0.85 0.15 240);
+    --tag-color-bg: oklch(0.32 0.08 20);
+    --tag-color-text: oklch(0.85 0.15 20);
+    --tag-dimension-bg: oklch(0.32 0.1 85);
+    --tag-dimension-text: oklch(0.85 0.15 85);
+    --highlight: oklch(0.85 0.18 65);
 
     --chart-1: oklch(0.72 0.14 65);
     --chart-2: oklch(0.7 0.1 155);
@@ -171,11 +178,35 @@
     }
     body {
         @apply bg-background text-foreground;
+        transition: var(--theme-transition);
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
     }
     html {
         @apply font-sans;
+        transition: var(--theme-transition);
+    }
+    /* Smooth theme transitions for common elements */
+    body, 
+    .card, 
+    .popover, 
+    input, 
+    textarea,
+    button, 
+    .badge, 
+    span, 
+    p, 
+    h1, 
+    h2, 
+    h3, 
+    h4, 
+    code, 
+    div,
+    header,
+    footer,
+    svg,
+    mark {
+        transition: var(--theme-transition);
     }
     ::selection {
         @apply bg-primary/20 text-foreground;

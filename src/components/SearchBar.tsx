@@ -1,7 +1,7 @@
 import { useMemo, useState, useRef, useEffect, memo, useCallback } from "react";
-import { Search, X } from "lucide-react";
+import { Search, X, Loader2 } from "lucide-react";
 import type { Product } from "@/types/Product";
-import { search, type SearchOutput } from "@/utils/search";
+import { searchSupabase, type SearchOutput } from "@/utils/search";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useClickOutside } from "@/hooks/useClickOutside";
 import { Button } from "@/components/ui/button";
@@ -9,25 +9,38 @@ import { Button } from "@/components/ui/button";
 interface Props {
     query: string;
     onChange: (query: string) => void;
-    products: Product[];
     onSelect: (product: Product) => void;
     category: string | null;
 }
 
-function SearchBarComponent({ query, onChange, products, onSelect, category }: Props) {
+function SearchBarComponent({ query, onChange, onSelect, category }: Props) {
     const [open, setOpen] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [results, setResults] = useState<SearchOutput>({ codeResults: [], tokenResults: [], total: 0 });
     const [selectedIndex, setSelectedIndex] = useState(-1);
     const containerRef = useRef<HTMLDivElement>(null);
     const listRef = useRef<HTMLDivElement>(null);
 
     const isCodeQuery = /^\d/.test(query.trim());
-    const debouncedQuery = useDebounce(query, isCodeQuery ? 50 : 200);
+    const debouncedQuery = useDebounce(query, isCodeQuery ? 50 : 300);
 
     useClickOutside(containerRef, useCallback(() => setOpen(false), []));
 
-    const results: SearchOutput = useMemo(() => {
-        return search(debouncedQuery, { category });
-    }, [debouncedQuery, products, category]);
+    useEffect(() => {
+        const performSearch = async () => {
+            if (!debouncedQuery.trim()) {
+                setResults({ codeResults: [], tokenResults: [], total: 0 });
+                return;
+            }
+
+            setLoading(true);
+            const searchResults = await searchSupabase(debouncedQuery, { category });
+            setResults(searchResults);
+            setLoading(false);
+        };
+
+        performSearch();
+    }, [debouncedQuery, category]);
 
     const allProducts = useMemo(() => [
         ...results.codeResults.map(r => r.product),
@@ -105,14 +118,17 @@ function SearchBarComponent({ query, onChange, products, onSelect, category }: P
                     placeholder="Cauta dupa cod sau descriere..."
                     className="w-full h-12 rounded-lg border border-input bg-card pl-11 pr-10 text-[15px] font-medium text-foreground placeholder:text-muted-foreground/70 placeholder:font-normal transition-all focus-visible:outline-none focus-visible:border-primary/50 focus-visible:ring-[3px] focus-visible:ring-primary/10 focus-visible:shadow-lg focus-visible:shadow-primary/5 dark:bg-card/80 dark:backdrop-blur-sm"
                 />
-                {query && (
-                    <button
-                        onClick={() => { onChange(""); setOpen(false); }}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-                    >
-                        <X className="size-4" />
-                    </button>
-                )}
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                    {loading && <Loader2 className="size-4 animate-spin text-muted-foreground/40 mr-1" />}
+                    {query && (
+                        <button
+                            onClick={() => { onChange(""); setOpen(false); }}
+                            className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                        >
+                            <X className="size-4" />
+                        </button>
+                    )}
+                </div>
             </div>
 
             {open && results.total > 0 && (
@@ -131,7 +147,7 @@ function SearchBarComponent({ query, onChange, products, onSelect, category }: P
                             <>
                                 <SectionLabel>Coduri</SectionLabel>
                                 {results.codeResults.map((r, i) => (
-                                    <Row key={`c-${r.product.code}`} product={r.product} isSelected={i === selectedIndex}
+                                    <Row key={`c-${r.product.code}-${r.product.store}-${r.product.storage}`} product={r.product} isSelected={i === selectedIndex}
                                         onClick={() => handleSelect(r.product)} highlight={highlight}
                                         meta={buildMeta(r.product)} index={i} />
                                 ))}
@@ -142,7 +158,7 @@ function SearchBarComponent({ query, onChange, products, onSelect, category }: P
                                 <SectionLabel border={results.codeResults.length > 0}>Produse</SectionLabel>
                                 {results.tokenResults.map((r, i) => {
                                     const idx = results.codeResults.length + i;
-                                    return <Row key={`t-${r.product.code}`} product={r.product} isSelected={idx === selectedIndex}
+                                    return <Row key={`t-${r.product.code}-${r.product.store}-${r.product.storage}`} product={r.product} isSelected={idx === selectedIndex}
                                         onClick={() => handleSelect(r.product)} highlight={highlight}
                                         meta={buildMeta(r.product)} index={i} />;
                                 })}
