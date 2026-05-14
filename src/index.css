@@ -253,3 +253,6 @@ body::before {
 .animate-scale-in { animation: scaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) both; }
 .animate-slide-down { animation: slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1) both; }
 .animate-entry { animation: entryStagger 0.3s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+.scrollbar-none::-webkit-scrollbar { display: none; }
+.scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }

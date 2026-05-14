@@ -59,7 +59,7 @@ function SearchHistoryComponent({ history, historyItems, onSelectProduct, onDele
                                     </code>
                                     <span className="text-[10px] font-mono text-muted-foreground/40">{formatTime(item.timestamp)}</span>
                                 </div>
-                                <p className="text-xs text-muted-foreground truncate leading-relaxed">{p.name}</p>
+                                <p className="text-xs text-muted-foreground leading-relaxed overflow-x-auto whitespace-nowrap scrollbar-none">{p.name}</p>
                             </div>
                             <ArrowRight className="size-3.5 text-muted-foreground/15 group-hover:text-primary/60 shrink-0 transition-all group-hover:translate-x-0.5" />
                         </div>
