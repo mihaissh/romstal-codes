@@ -57,7 +57,20 @@ export function useAuth() {
     }
 
     const signOut = async () => {
-        await supabase.auth.signOut();
+        try {
+            const { error } = await supabase.auth.signOut();
+            if (error) {
+                console.error("Sign out error:", error);
+                // If the server rejects the logout (e.g. session already gone), 
+                // we still want to clear the local state.
+                setUser(null);
+                setProfile(null);
+            }
+        } catch (e) {
+            console.error("Sign out exception:", e);
+            setUser(null);
+            setProfile(null);
+        }
     };
 
     return { user, profile, loading, signOut, refreshProfile: () => user && fetchProfile(user.id) };
