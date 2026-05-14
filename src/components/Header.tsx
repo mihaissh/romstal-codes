@@ -159,7 +159,7 @@ export default function Header({ theme, onToggleTheme, view, onViewChange, user,
                         </button>
                     ) : (
                         <Tooltip>
-                            <TooltipTrigger asChild>
+                            <TooltipTrigger>
                                 <button
                                     className="flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-[11px] font-mono uppercase tracking-wider transition-all opacity-40 grayscale cursor-not-allowed bg-repeating-linear-gradient"
                                 >
