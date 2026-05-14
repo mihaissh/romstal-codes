@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 
-export type NoteTag = "platit" | "neplatit" | "livrare curier" | "livrare marfa" | "ridica client";
+export type NoteTag = "platit" | "neplatit" | "livrare curier" | "livrare marfa" | "ridica client" | "SPEDEX";
 
 export interface Note {
     id: string;
