@@ -6,27 +6,35 @@ import Header from "@/components/Header";
 import StoreSelector from "@/components/StoreSelector";
 import StorageSelector, { type StorageLocation } from "@/components/StorageSelector";
 import ChangeCalculator from "@/components/ChangeCalculator";
+import Notes from "@/components/Notes";
+import Profile from "@/components/Profile";
+import Stoc from "@/components/Stoc";
+import Auth from "@/components/Auth";
 import { useSearchHistory } from "@/hooks/useSearchHistory";
 import { useTheme } from "@/hooks/useTheme";
-import products1bn1Deposit from "@/stoc_1bn1_deposit.json";
-import products1bn1Expo from "@/stoc_1bn1_expo.json";
-import products1bv1Deposit from "@/stoc_1bv1_deposit.json";
-import products1bv1Expo from "@/stoc_1bv1_expo.json";
+import { useAuth } from "@/hooks/useAuth";
 import type { Product } from "@/types/Product";
-import { buildIndex, clearIndex } from "@/utils/search";
 
 type StoreCode = "1BN1" | "1BV1";
-type View = "search" | "calculator";
+type View = "search" | "calculator" | "notes" | "profile" | "stoc";
 
 export default function App() {
     const { theme, toggle: toggleTheme } = useTheme();
+    const { user, profile, signOut } = useAuth();
     const [view, setView] = useState<View>("search");
+    const [showAuth, setShowAuth] = useState(false);
+
+    const handleLogout = async () => {
+        await signOut();
+        setView("search");
+    };
+
     const [query, setQuery] = useState("");
     const [selected, setSelected] = useState<Product | null>(null);
     const [currentStore, setCurrentStore] = useState<StoreCode>("1BN1");
     const [currentStorage, setCurrentStorage] = useState<StorageLocation>("deposit");
 
-    const toggleView = () => setView(v => v === "search" ? "calculator" : "search");
+    const handleViewChange = (newView: View) => setView(newView);
 
     const availableStorages = useMemo<StorageLocation[]>(() =>
         currentStore === "1BV1" ? ["deposit", "expo"] : ["deposit"],
@@ -37,18 +45,6 @@ export default function App() {
     }, [availableStorages, currentStorage]);
 
     const { history, historyItems, addToHistory, removeFromHistory, clearHistory } = useSearchHistory(currentStore);
-
-    const products = useMemo(() => {
-        if (currentStore === "1BN1") {
-            return (currentStorage === "deposit" ? products1bn1Deposit : products1bn1Expo) as Product[];
-        }
-        return (currentStorage === "deposit" ? products1bv1Deposit : products1bv1Expo) as Product[];
-    }, [currentStore, currentStorage]);
-
-    useEffect(() => {
-        buildIndex(products);
-        return () => clearIndex();
-    }, [products]);
 
     const handleSelectProduct = (product: Product) => {
         setSelected(product);
@@ -61,7 +57,6 @@ export default function App() {
         setSelected(null);
         setQuery("");
         setCurrentStorage("deposit");
-        clearIndex();
     };
 
     const handleStorageSelect = (storage: StorageLocation) => {
@@ -69,15 +64,25 @@ export default function App() {
         setCurrentStorage(storage);
         setSelected(null);
         setQuery("");
-        clearIndex();
     };
 
     return (
         <div className="min-h-screen px-5 sm:px-6 pb-20">
             <div className="max-w-2xl mx-auto">
-                <Header theme={theme} onToggleTheme={toggleTheme} view={view} onToggleView={toggleView} />
+                <Header 
+                    theme={theme} 
+                    onToggleTheme={toggleTheme} 
+                    view={view} 
+                    onViewChange={handleViewChange}
+                    user={user}
+                    profile={profile}
+                    onLoginClick={() => setShowAuth(true)}
+                    onLogout={handleLogout}
+                />
 
-                {view === "search" ? (
+                {showAuth && <Auth onClose={() => setShowAuth(false)} />}
+
+                {view === "search" && (
                     <div key="search-view">
                         {/* Selectors */}
                         <div className="flex items-center gap-2 mb-6 animate-fade-up" style={{ animationDelay: "80ms" }}>
@@ -90,7 +95,7 @@ export default function App() {
 
                         {/* Search */}
                         <div className="relative z-50 mb-8 animate-fade-up" style={{ animationDelay: "120ms" }}>
-                            <SearchBar query={query} onChange={setQuery} products={products} onSelect={handleSelectProduct} category={null} />
+                            <SearchBar query={query} onChange={setQuery} onSelect={handleSelectProduct} category={null} />
                         </div>
 
                         {/* Product detail */}
@@ -103,9 +108,29 @@ export default function App() {
                         {/* History */}
                         {!selected && <SearchHistory history={history} historyItems={historyItems} onSelectProduct={handleSelectProduct} onDeleteItem={removeFromHistory} onClearAll={clearHistory} />}
                     </div>
-                ) : (
+                )}
+
+                {view === "calculator" && (
                     <div key="calculator-view" className="pt-2">
                         <ChangeCalculator />
+                    </div>
+                )}
+
+                {view === "notes" && (
+                    <div key="notes-view" className="pt-2">
+                        <Notes />
+                    </div>
+                )}
+
+                {view === "profile" && (
+                    <div key="profile-view" className="pt-2">
+                        <Profile />
+                    </div>
+                )}
+
+                {view === "stoc" && (
+                    <div key="stoc-view" className="pt-2">
+                        <Stoc />
                     </div>
                 )}
 
