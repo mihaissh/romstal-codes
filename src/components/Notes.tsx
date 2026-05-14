@@ -22,6 +22,7 @@ export default function Notes() {
     const [nume, setNume] = useState("");
     const [client, setClient] = useState("");
     const [orderOrInvoice, setOrderOrInvoice] = useState("");
+    const [phoneNumber, setPhoneNumber] = useState("");
     const [text, setText] = useState("");
     const [selectedTags, setSelectedTags] = useState<NoteTag[]>([]);
     const [editingId, setEditingId] = useState<string | null>(null);
@@ -34,6 +35,7 @@ export default function Notes() {
             nume,
             client,
             orderOrInvoice,
+            phone_number: phoneNumber.trim() || undefined,
             text: text.trim() || undefined,
             tags: selectedTags,
         };
@@ -52,6 +54,7 @@ export default function Notes() {
         setNume("");
         setClient("");
         setOrderOrInvoice("");
+        setPhoneNumber("");
         setText("");
         setSelectedTags([]);
         setEditingId(null);
@@ -62,6 +65,7 @@ export default function Notes() {
         setNume(note.nume);
         setClient(note.client);
         setOrderOrInvoice(note.orderOrInvoice);
+        setPhoneNumber(note.phone_number || "");
         setText(note.text || "");
         setSelectedTags(note.tags);
         window.scrollTo({ top: 0, behavior: "smooth" });
@@ -128,24 +132,34 @@ export default function Notes() {
                             />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-[10px] uppercase tracking-wider font-mono text-muted-foreground ml-1">Tag-uri</label>
-                            <div className="flex flex-wrap gap-1.5">
-                                {AVAILABLE_TAGS.map(tag => (
-                                    <button
-                                        key={tag}
-                                        type="button"
-                                        onClick={() => toggleTag(tag)}
-                                        className={cn(
-                                            "text-[10px] px-2.5 py-1 rounded-md border transition-all font-bold uppercase tracking-tight",
-                                            selectedTags.includes(tag)
-                                                ? TAG_COLORS[tag]
-                                                : "bg-background text-muted-foreground border-border hover:border-primary/50"
-                                        )}
-                                    >
-                                        {tag}
-                                    </button>
-                                ))}
-                            </div>
+                            <label className="text-[10px] uppercase tracking-wider font-mono text-muted-foreground ml-1">Telefon (Optional)</label>
+                            <Input
+                                placeholder="07xx xxx xxx"
+                                value={phoneNumber}
+                                onChange={(e) => setPhoneNumber(e.target.value)}
+                                type="tel"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-[10px] uppercase tracking-wider font-mono text-muted-foreground ml-1">Tag-uri</label>
+                        <div className="flex flex-wrap gap-1.5">
+                            {AVAILABLE_TAGS.map(tag => (
+                                <button
+                                    key={tag}
+                                    type="button"
+                                    onClick={() => toggleTag(tag)}
+                                    className={cn(
+                                        "text-[10px] px-2.5 py-1 rounded-md border transition-all font-bold uppercase tracking-tight",
+                                        selectedTags.includes(tag)
+                                            ? TAG_COLORS[tag]
+                                            : "bg-background text-muted-foreground border-border hover:border-primary/50"
+                                    )}
+                                >
+                                    {tag}
+                                </button>
+                            ))}
                         </div>
                     </div>
 
@@ -217,6 +231,12 @@ export default function Notes() {
                                         </div>
                                         <p className="text-xs text-muted-foreground">
                                             Client: <span className="text-foreground">{note.client}</span>
+                                            {note.phone_number && (
+                                                <>
+                                                    <span className="mx-2 opacity-30">|</span>
+                                                    Tel: <span className="text-foreground font-mono">{note.phone_number}</span>
+                                                </>
+                                            )}
                                         </p>
                                         {note.text && (
                                             <p className="text-xs mt-2 text-muted-foreground whitespace-pre-wrap border-l-2 border-primary/20 pl-2">
