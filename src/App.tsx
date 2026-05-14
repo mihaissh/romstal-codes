@@ -67,8 +67,8 @@ export default function App() {
     };
 
     return (
-        <div className="min-h-screen px-5 sm:px-6 pb-20">
-            <div className="max-w-2xl mx-auto">
+        <div className="min-h-screen px-5 sm:px-6 flex flex-col">
+            <div className="max-w-2xl mx-auto flex-1 w-full pb-10">
                 <Header 
                     theme={theme} 
                     onToggleTheme={toggleTheme} 
@@ -133,18 +133,18 @@ export default function App() {
                         <Stoc />
                     </div>
                 )}
-
-                {/* Footer */}
-                <div className="fixed bottom-0 left-0 right-0 py-3 text-center pointer-events-none">
-                    <p className="text-[10px] font-mono text-muted-foreground/30 tracking-wider pointer-events-auto">
-                        built by{" "}
-                        <a href="https://github.com/mihaissh" target="_blank" rel="noopener noreferrer"
-                           className="text-muted-foreground/50 hover:text-primary transition-colors underline underline-offset-2 decoration-border hover:decoration-primary">
-                            mihaissh
-                        </a>
-                    </p>
-                </div>
             </div>
+
+            {/* Footer */}
+            <footer className="py-6 text-center">
+                <p className="text-[10px] font-mono text-muted-foreground/30 tracking-wider">
+                    built by{" "}
+                    <a href="https://github.com/mihaissh" target="_blank" rel="noopener noreferrer"
+                       className="text-muted-foreground/50 hover:text-primary transition-colors underline underline-offset-2 decoration-border hover:decoration-primary">
+                        mihaissh
+                    </a>
+                </p>
+            </footer>
         </div>
     );
 }
