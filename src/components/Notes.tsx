@@ -3,8 +3,8 @@ import { useNotes, type Note, type NoteTag } from "@/hooks/useNotes";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Trash2, Plus, StickyNote, Edit2, X, Check } from "lucide-react";
+import { Card, CardHeader, CardTitle, CardContent, CardAction } from "@/components/ui/card";
+import { Trash2, Plus, StickyNote, Edit2, X, Check, Phone } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const AVAILABLE_TAGS: NoteTag[] = ["platit", "neplatit", "livrare curier", "livrare marfa", "ridica client", "SPEDEX"];
@@ -20,6 +20,9 @@ const TAG_COLORS: Record<NoteTag, string> = {
 
 export default function Notes() {
     const { notes, loading, addNote, updateNote, deleteNote, clearNotes } = useNotes();
+    const [showModal, setShowModal] = useState(false);
+    
+    // Form state
     const [nume, setNume] = useState("");
     const [client, setClient] = useState("");
     const [orderOrInvoice, setOrderOrInvoice] = useState("");
@@ -43,11 +46,30 @@ export default function Notes() {
 
         if (editingId) {
             updateNote(editingId, noteData);
-            setEditingId(null);
         } else {
             addNote(noteData);
         }
 
+        closeModal();
+    };
+
+    const openModal = (note?: Note) => {
+        if (note) {
+            setEditingId(note.id);
+            setNume(note.nume);
+            setClient(note.client);
+            setOrderOrInvoice(note.orderOrInvoice);
+            setPhoneNumber(note.phone_number || "");
+            setText(note.text || "");
+            setSelectedTags(note.tags);
+        } else {
+            resetForm();
+        }
+        setShowModal(true);
+    };
+
+    const closeModal = () => {
+        setShowModal(false);
         resetForm();
     };
 
@@ -61,17 +83,6 @@ export default function Notes() {
         setEditingId(null);
     };
 
-    const handleEdit = (note: Note) => {
-        setEditingId(note.id);
-        setNume(note.nume);
-        setClient(note.client);
-        setOrderOrInvoice(note.orderOrInvoice);
-        setPhoneNumber(note.phone_number || "");
-        setText(note.text || "");
-        setSelectedTags(note.tags);
-        window.scrollTo({ top: 0, behavior: "smooth" });
-    };
-
     const toggleTag = (tag: NoteTag) => {
         setSelectedTags(prev => 
             prev.includes(tag) 
@@ -82,128 +93,161 @@ export default function Notes() {
 
     return (
         <div className="space-y-6 animate-fade-up">
-            <Card className={cn(
-                "p-4 border-dashed transition-colors",
-                editingId ? "bg-primary/5 border-primary/50" : "bg-muted/30"
-            )}>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-xs font-mono uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                            {editingId ? <Edit2 className="size-3 text-primary" /> : <Plus className="size-3" />}
-                            {editingId ? "Editeaza Nota" : "Adauga Nota Noua"}
-                        </h3>
-                        {editingId && (
-                            <Button variant="ghost" size="sm" onClick={resetForm} className="h-7 text-[10px] uppercase font-mono">
-                                <X className="size-3 mr-1" /> Anuleaza
-                            </Button>
-                        )}
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <label className="text-[10px] uppercase tracking-wider font-mono text-muted-foreground ml-1">Nume</label>
-                            <Input
-                                placeholder="Nume"
-                                value={nume}
-                                onChange={(e) => setNume(e.target.value)}
-                                required
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-[10px] uppercase tracking-wider font-mono text-muted-foreground ml-1">Client</label>
-                            <Input
-                                placeholder="Client"
-                                value={client}
-                                onChange={(e) => setClient(e.target.value)}
-                                required
-                            />
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <label className="text-[10px] uppercase tracking-wider font-mono text-muted-foreground ml-1">OL / Factura</label>
-                            <Input
-                                placeholder="OL / Factura"
-                                value={orderOrInvoice}
-                                onChange={(e) => setOrderOrInvoice(e.target.value.replace(/[^0-9]/g, ""))}
-                                inputMode="numeric"
-                                pattern="[0-9]*"
-                                required
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-[10px] uppercase tracking-wider font-mono text-muted-foreground ml-1">Telefon (Optional)</label>
-                            <Input
-                                placeholder="07xx xxx xxx"
-                                value={phoneNumber}
-                                onChange={(e) => setPhoneNumber(e.target.value)}
-                                type="tel"
-                            />
-                        </div>
-                    </div>
-
-                    <div className="space-y-2">
-                        <label className="text-[10px] uppercase tracking-wider font-mono text-muted-foreground ml-1">Tag-uri</label>
-                        <div className="flex flex-wrap gap-1.5">
-                            {AVAILABLE_TAGS.map(tag => (
-                                <button
-                                    key={tag}
-                                    type="button"
-                                    onClick={() => toggleTag(tag)}
-                                    className={cn(
-                                        "text-[10px] px-2.5 py-1 rounded-md border transition-all font-bold uppercase tracking-tight",
-                                        selectedTags.includes(tag)
-                                            ? TAG_COLORS[tag]
-                                            : "bg-background text-muted-foreground border-border hover:border-primary/50"
-                                    )}
-                                >
-                                    {tag}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="space-y-2">
-                        <label className="text-[10px] uppercase tracking-wider font-mono text-muted-foreground ml-1">Text Optional (Detalii)</label>
-                        <Textarea
-                            placeholder="Adauga mai multe detalii aici..."
-                            value={text}
-                            onChange={(e) => setText(e.target.value)}
-                            className="min-h-[100px] resize-none"
-                        />
-                    </div>
-
-                    <Button type="submit" className="w-full gap-2" disabled={!nume || !client || !orderOrInvoice}>
-                        {editingId ? <Check className="size-4" /> : <Plus className="size-4" />}
-                        {editingId ? "Salveaza Modificarile" : "Adauga Nota"}
-                    </Button>
-                </form>
-            </Card>
-
-            <div className="space-y-4">
-                <div className="flex items-center justify-between px-1">
-                    <h2 className="text-xs font-mono uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                        <StickyNote className="size-3" />
-                        Note Recente ({notes.length})
-                        {loading && <span className="animate-pulse text-[9px] lowercase opacity-50">(se incarca...)</span>}
-                    </h2>
+            {/* Header with Create Button */}
+            <div className="flex items-center justify-between px-1">
+                <h2 className="text-xs font-mono uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                    <StickyNote className="size-3" />
+                    Note Recente ({notes.length})
+                    {loading && <span className="animate-pulse text-[9px] lowercase opacity-50">(se incarca...)</span>}
+                </h2>
+                <div className="flex items-center gap-2">
                     {notes.length > 0 && (
                         <Button
                             variant="ghost"
                             size="sm"
                             onClick={clearNotes}
-                            className="h-7 text-[10px] font-mono uppercase tracking-tighter text-muted-foreground hover:text-destructive"
+                            className="h-8 text-[10px] font-mono uppercase tracking-tighter text-muted-foreground hover:text-destructive"
                         >
                             Sterge Tot
                         </Button>
                     )}
+                    <Button 
+                        onClick={() => openModal()} 
+                        size="sm" 
+                        className="h-8 gap-2 font-bold uppercase text-[10px] tracking-wider"
+                    >
+                        <Plus className="size-3.5" />
+                        Creaza Nota
+                    </Button>
                 </div>
+            </div>
 
+            {/* Modal Overlay */}
+            {showModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200">
+                    <Card className="w-full max-w-lg shadow-2xl animate-scale-in max-h-[90vh] overflow-y-auto">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2 text-sm font-mono uppercase tracking-widest">
+                                {editingId ? <Edit2 className="size-4 text-primary" /> : <Plus className="size-4 text-primary" />}
+                                {editingId ? "Editeaza Nota" : "Adauga Nota Noua"}
+                            </CardTitle>
+                            <CardAction>
+                                <Button variant="ghost" size="icon-sm" onClick={closeModal} className="rounded-full">
+                                    <X className="size-4" />
+                                </Button>
+                            </CardAction>
+                        </CardHeader>
+                        <CardContent className="pt-4">
+                            <form onSubmit={handleSubmit} className="space-y-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] uppercase tracking-wider font-mono text-muted-foreground ml-1">Nume</label>
+                                        <Input
+                                            placeholder="Nume"
+                                            value={nume}
+                                            onChange={(e) => setNume(e.target.value)}
+                                            required
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] uppercase tracking-wider font-mono text-muted-foreground ml-1">Client</label>
+                                        <Input
+                                            placeholder="Client"
+                                            value={client}
+                                            onChange={(e) => setClient(e.target.value)}
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] uppercase tracking-wider font-mono text-muted-foreground ml-1">OL / Factura</label>
+                                        <Input
+                                            placeholder="OL / Factura"
+                                            value={orderOrInvoice}
+                                            onChange={(e) => setOrderOrInvoice(e.target.value.replace(/[^0-9]/g, ""))}
+                                            inputMode="numeric"
+                                            pattern="[0-9]*"
+                                            required
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] uppercase tracking-wider font-mono text-muted-foreground ml-1">Telefon (Optional)</label>
+                                        <div className="relative">
+                                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+                                            <Input
+                                                placeholder="07xx xxx xxx"
+                                                value={phoneNumber}
+                                                onChange={(e) => setPhoneNumber(e.target.value)}
+                                                type="tel"
+                                                className="pl-9"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-[10px] uppercase tracking-wider font-mono text-muted-foreground ml-1">Tag-uri</label>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {AVAILABLE_TAGS.map(tag => (
+                                            <button
+                                                key={tag}
+                                                type="button"
+                                                onClick={() => toggleTag(tag)}
+                                                className={cn(
+                                                    "text-[10px] px-2.5 py-1 rounded-md border transition-all font-bold uppercase tracking-tight",
+                                                    selectedTags.includes(tag)
+                                                        ? TAG_COLORS[tag]
+                                                        : "bg-background text-muted-foreground border-border hover:border-primary/50"
+                                                )}
+                                            >
+                                                {tag}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-[10px] uppercase tracking-wider font-mono text-muted-foreground ml-1">Text Optional (Detalii)</label>
+                                    <Textarea
+                                        placeholder="Adauga mai multe detalii aici..."
+                                        value={text}
+                                        onChange={(e) => setText(e.target.value)}
+                                        className="min-h-[120px] resize-none"
+                                    />
+                                </div>
+
+                                <div className="flex gap-3 pt-2">
+                                    <Button variant="outline" type="button" onClick={closeModal} className="flex-1">
+                                        Anuleaza
+                                    </Button>
+                                    <Button type="submit" className="flex-[2] gap-2" disabled={!nume || !client || !orderOrInvoice}>
+                                        {editingId ? <Check className="size-4" /> : <Plus className="size-4" />}
+                                        {editingId ? "Salveaza Modificarile" : "Adauga Nota"}
+                                    </Button>
+                                </div>
+                            </form>
+                        </CardContent>
+                    </Card>
+                </div>
+            )}
+
+            {/* Notes List */}
+            <div className="space-y-4">
                 {notes.length === 0 ? (
                     <div className="text-center py-12 border rounded-xl border-dashed bg-muted/10">
                         <StickyNote className="size-8 mx-auto mb-3 text-muted-foreground/20" />
                         <p className="text-sm text-muted-foreground font-mono">Nu exista note salvate.</p>
+                        <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => openModal()} 
+                            className="mt-4 gap-2 font-mono text-[10px] uppercase tracking-widest"
+                        >
+                            <Plus className="size-3" />
+                            Prima Nota
+                        </Button>
                     </div>
                 ) : (
                     <div className="grid gap-3">
@@ -259,7 +303,7 @@ export default function Notes() {
                                         <Button
                                             variant="ghost"
                                             size="icon"
-                                            onClick={() => handleEdit(note)}
+                                            onClick={() => openModal(note)}
                                             className="size-8 text-muted-foreground hover:text-primary"
                                         >
                                             <Edit2 className="size-4" />
