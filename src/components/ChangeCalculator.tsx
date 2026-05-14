@@ -18,6 +18,36 @@ const numberFormatter = new Intl.NumberFormat("ro-RO", {
     maximumFractionDigits: 2,
 });
 
+const DENOMINATIONS = [
+    { value: 500, label: "500 lei", image: "/images/money/500 lei.jpg" },
+    { value: 200, label: "200 lei", image: "/images/money/200_lei._Romania,_2006_a.jpg" },
+    { value: 100, label: "100 lei", image: "/images/money/100_lei._Romania.jpg" },
+    { value: 50, label: "50 lei", image: "/images/money/50_lei._Romania,_2005_a.jpg" },
+    { value: 20, label: "20 lei", image: "/images/money/20_lei._Romania,_2021_a.jpg" },
+    { value: 10, label: "10 lei", image: "/images/money/10_lei.jpg" },
+    { value: 5, label: "5 lei", image: "/images/money/5_lei._Romania,_2005_a.jpg" },
+    { value: 1, label: "1 leu", image: "/images/money/1_leu._Romania,_2005_a.jpg" },
+    { value: 0.5, label: "50 bani", image: "/images/money/PXL_20251207_100033687.jpg" },
+    { value: 0.1, label: "10 bani", image: "/images/money/PXL_20251207_100049629.jpg" },
+    { value: 0.05, label: "5 bani", image: null },
+    { value: 0.01, label: "1 ban", image: null },
+];
+
+function getChangeBreakdown(amount: number) {
+    const breakdown: { value: number; count: number; label: string; image: string | null }[] = [];
+    let remaining = Math.round(amount * 100);
+
+    for (const den of DENOMINATIONS) {
+        const denValue = Math.round(den.value * 100);
+        const count = Math.floor(remaining / denValue);
+        if (count > 0) {
+            breakdown.push({ ...den, count });
+            remaining -= count * denValue;
+        }
+    }
+    return breakdown;
+}
+
 function formatAmount(n: number): string {
     return numberFormatter.format(n);
 }
@@ -175,19 +205,57 @@ const RESULT_CONFIG: Record<CalculationKind, { label: string; cls: string; value
 
 function ResultPanel({ result }: { result: Result }) {
     const c = RESULT_CONFIG[result.kind];
+    const breakdown = useMemo(() => 
+        result.kind === "ok" ? getChangeBreakdown(result.amount) : [], 
+    [result]);
+
     return (
-        <div className={`mt-5 rounded-xl border ${c.cls} px-4 py-4 animate-scale-in`}>
-            <div className="flex items-center justify-between">
-                <div className="text-[10px] font-mono font-bold tracking-[0.2em] uppercase opacity-70">
-                    {c.label}
+        <div className="space-y-4 animate-scale-in">
+            <div className={`mt-5 rounded-xl border ${c.cls} px-4 py-4`}>
+                <div className="flex items-center justify-between">
+                    <div className="text-[10px] font-mono font-bold tracking-[0.2em] uppercase opacity-70">
+                        {c.label}
+                    </div>
+                    <div className="text-[10px] font-mono tabular-nums opacity-60">
+                        {formatAmount(result.given)} − {formatAmount(result.cost)}
+                    </div>
                 </div>
-                <div className="text-[10px] font-mono tabular-nums opacity-60">
-                    {formatAmount(result.given)} − {formatAmount(result.cost)}
+                <div className={`mt-1 text-3xl sm:text-4xl font-bold tabular-nums ${c.valueCls}`}>
+                    {c.prefix}{formatAmount(result.amount)} <span className="text-base font-mono font-semibold opacity-70">lei</span>
                 </div>
             </div>
-            <div className={`mt-1 text-3xl sm:text-4xl font-bold tabular-nums ${c.valueCls}`}>
-                {c.prefix}{formatAmount(result.amount)} <span className="text-base font-mono font-semibold opacity-70">lei</span>
-            </div>
+
+            {breakdown.length > 0 && (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {breakdown.map((item, i) => (
+                        <div 
+                            key={item.value} 
+                            className="bg-card/40 border border-border rounded-xl p-3 flex flex-col items-center text-center animate-fade-up"
+                            style={{ animationDelay: `${(i + 1) * 50}ms` }}
+                        >
+                            <div className="relative w-full aspect-[2/1] mb-2 flex items-center justify-center bg-muted/20 rounded-lg overflow-hidden">
+                                {item.image ? (
+                                    <img 
+                                        src={item.image} 
+                                        alt={item.label} 
+                                        className="w-full h-full object-contain"
+                                    />
+                                ) : (
+                                    <div className="text-[10px] font-mono text-muted-foreground/40 uppercase">
+                                        {item.label}
+                                    </div>
+                                )}
+                                <div className="absolute top-1 right-1 bg-primary text-primary-foreground text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-sm">
+                                    x{item.count}
+                                </div>
+                            </div>
+                            <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-muted-foreground">
+                                {item.label}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
         </div>
     );
 }
