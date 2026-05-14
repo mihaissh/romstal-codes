@@ -217,7 +217,7 @@ const Row = memo(function Row({ product, isSelected, onClick, highlight, meta, i
             }`}
         >
             <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium text-foreground truncate leading-snug">
+                <div className="text-sm font-medium text-foreground leading-snug overflow-x-auto whitespace-nowrap scrollbar-none">
                     {highlight(product.name)}
                 </div>
                 {meta.length > 0 && (
