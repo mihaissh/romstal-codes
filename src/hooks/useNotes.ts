@@ -8,6 +8,7 @@ export interface Note {
     nume: string;
     client: string;
     orderOrInvoice: string;
+    phone_number?: string;
     text?: string;
     tags: NoteTag[];
     createdAt: number;
