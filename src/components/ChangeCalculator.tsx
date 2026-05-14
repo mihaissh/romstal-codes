@@ -27,8 +27,8 @@ const DENOMINATIONS = [
     { value: 10, label: "10 lei", image: "/images/money/10_lei.jpg" },
     { value: 5, label: "5 lei", image: "/images/money/5_lei._Romania,_2005_a.jpg" },
     { value: 1, label: "1 leu", image: "/images/money/1_leu._Romania,_2005_a.jpg" },
-    { value: 0.5, label: "50 bani", image: "/images/money/PXL_20251207_100033687.jpg" },
-    { value: 0.1, label: "10 bani", image: "/images/money/PXL_20251207_100049629.jpg" },
+    { value: 0.5, label: "50 bani", image: null },
+    { value: 0.1, label: "10 bani", image: null },
     { value: 0.05, label: "5 bani", image: null },
     { value: 0.01, label: "1 ban", image: null },
 ];
@@ -226,34 +226,46 @@ function ResultPanel({ result }: { result: Result }) {
             </div>
 
             {breakdown.length > 0 && (
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    {breakdown.map((item, i) => (
-                        <div 
-                            key={item.value} 
-                            className="bg-card/40 border border-border rounded-xl p-3 flex flex-col items-center text-center animate-fade-up"
-                            style={{ animationDelay: `${(i + 1) * 50}ms` }}
-                        >
-                            <div className="relative w-full aspect-[2/1] mb-2 flex items-center justify-center bg-muted/20 rounded-lg overflow-hidden">
-                                {item.image ? (
-                                    <img 
-                                        src={item.image} 
-                                        alt={item.label} 
-                                        className="w-full h-full object-contain"
-                                    />
-                                ) : (
-                                    <div className="text-[10px] font-mono text-muted-foreground/40 uppercase">
-                                        {item.label}
+                <div className="space-y-3">
+                    <div className="text-[10px] font-mono font-bold text-muted-foreground/60 uppercase tracking-widest px-1">
+                        Bancnote si monede:
+                    </div>
+                    <div className="grid grid-cols-1 gap-3">
+                        {breakdown.map((item, i) => (
+                            <div 
+                                key={item.value} 
+                                className="bg-card/40 border border-border rounded-2xl p-4 flex items-center gap-6 animate-fade-up"
+                                style={{ animationDelay: `${(i + 1) * 50}ms` }}
+                            >
+                                <div className="relative flex-shrink-0 w-32 sm:w-40 aspect-[2/1] flex items-center justify-center bg-muted/20 rounded-xl overflow-hidden shadow-sm">
+                                    {item.image ? (
+                                        <img 
+                                            src={item.image} 
+                                            alt={item.label} 
+                                            className="w-full h-full object-contain hover:scale-110 transition-transform duration-500"
+                                        />
+                                    ) : (
+                                        <div className="text-[10px] font-mono text-muted-foreground/40 uppercase">
+                                            {item.label}
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="flex-1 flex items-center justify-between">
+                                    <div className="space-y-1">
+                                        <div className="text-lg font-bold text-foreground">
+                                            {item.label}
+                                        </div>
+                                        <div className="text-xs font-mono text-muted-foreground uppercase tracking-wider">
+                                            {item.count} {item.count === 1 ? 'bucata' : 'bucati'}
+                                        </div>
                                     </div>
-                                )}
-                                <div className="absolute top-1 right-1 bg-primary text-primary-foreground text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-sm">
-                                    x{item.count}
+                                    <div className="text-3xl font-black text-primary/20 font-mono">
+                                        x{item.count}
+                                    </div>
                                 </div>
                             </div>
-                            <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-muted-foreground">
-                                {item.label}
-                            </div>
-                        </div>
-                    ))}
+                        ))}
+                    </div>
                 </div>
             )}
         </div>
