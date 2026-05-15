@@ -1,7 +1,8 @@
-import { Moon, Sun, Calculator, Search, StickyNote, User, LogOut, Settings, Package, ChevronDown, Lock } from "lucide-react";
+import { Moon, Sun, Calculator, Search, StickyNote, User, LogOut, Settings, Package, ChevronDown, Lock, Info, Scan } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
+import HeaderAction from "./HeaderAction";
 import {
     TooltipProvider,
 } from "@/components/ui/tooltip";
@@ -15,7 +16,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export type View = "search" | "calculator" | "notes" | "profile" | "stoc";
+export type View = "search" | "calculator" | "notes" | "profile" | "stoc" | "scan";
 
 interface Props {
     theme: "light" | "dark";
@@ -26,6 +27,7 @@ interface Props {
     profile: { full_name: string | null; avatar_url: string | null } | null;
     onLoginClick: () => void;
     onLogout: () => void;
+    onAboutClick: () => void;
 }
 
 const LABELS: Record<View, string> = {
@@ -34,9 +36,87 @@ const LABELS: Record<View, string> = {
     notes: "note",
     profile: "profil utilizator",
     stoc: "situatie stoc",
+    scan: "scanare cod",
 };
 
-export default function Header({ theme, onToggleTheme, view, onViewChange, user, profile, onLoginClick, onLogout }: Props) {
+type TabConfig = {
+    view: View;
+    label: string;
+    icon: React.ReactNode;
+    requiresAuth?: boolean;
+    lockedReason?: string;
+};
+
+const TABS: TabConfig[] = [
+    { view: "search", label: "Cautare", icon: <Search className="size-3.5" /> },
+    { view: "calculator", label: "Calculator", icon: <Calculator className="size-3.5" /> },
+    {
+        view: "scan",
+        label: "Scan",
+        icon: <Scan className="size-3.5" />,
+        requiresAuth: true,
+        lockedReason: "Login necesar",
+    },
+    {
+        view: "notes",
+        label: "Note",
+        icon: <StickyNote className="size-3.5" />,
+        requiresAuth: true,
+        lockedReason: "In lucru / Login necesar",
+    },
+];
+
+interface NavTabProps {
+    tab: TabConfig;
+    activeView: View;
+    locked: boolean;
+    onClick: () => void;
+}
+
+function NavTab({ tab, activeView, locked, onClick }: NavTabProps) {
+    const baseTab =
+        "flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-[11px] font-mono uppercase tracking-wider transition-all";
+
+    if (locked) {
+        return (
+            <div className="flex-1 relative group">
+                <button
+                    type="button"
+                    disabled
+                    className={cn(
+                        baseTab,
+                        "w-full opacity-40 grayscale cursor-not-allowed bg-repeating-linear-gradient",
+                    )}
+                >
+                    <Lock className="size-3.5" />
+                    <span className="hidden sm:inline">{tab.label}</span>
+                </button>
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-50 bg-foreground text-background text-[10px] font-mono uppercase tracking-widest px-3 py-1.5 rounded-md whitespace-nowrap shadow-xl">
+                    {tab.lockedReason ?? "Login necesar"}
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-foreground" />
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <button
+            type="button"
+            onClick={onClick}
+            className={cn(
+                baseTab,
+                activeView === tab.view
+                    ? "bg-background text-primary shadow-sm font-bold"
+                    : "text-muted-foreground hover:text-foreground hover:bg-background/50",
+            )}
+        >
+            {tab.icon}
+            <span className="hidden sm:inline">{tab.label}</span>
+        </button>
+    );
+}
+
+export default function Header({ theme, onToggleTheme, view, onViewChange, user, profile, onLoginClick, onLogout, onAboutClick }: Props) {
     return (
         <TooltipProvider>
             <header className="pt-8 sm:pt-12 pb-4 space-y-6 animate-slide-down">
@@ -53,15 +133,19 @@ export default function Header({ theme, onToggleTheme, view, onViewChange, user,
                         </span>
                     </div>
                     <div className="flex items-center gap-1">
-                        <Button
-                            variant="ghost"
-                            size="icon"
+                        <HeaderAction
+                            icon={<Info className="size-[18px]" />}
+                            label="Despre proiect"
+                            onClick={onAboutClick}
+                            className="text-muted-foreground hover:text-primary"
+                        />
+
+                        <HeaderAction
+                            icon={theme === "dark" ? <Sun className="size-[18px]" /> : <Moon className="size-[18px]" />}
+                            label="Schimba tema"
+                            description={theme === "dark" ? "Tema luminoasa" : "Tema intunecata"}
                             onClick={onToggleTheme}
-                            className="rounded-full"
-                            aria-label="Schimba tema"
-                        >
-                            {theme === "dark" ? <Sun className="size-[18px]" /> : <Moon className="size-[18px]" />}
-                        </Button>
+                        />
                         {user ? (
                             <DropdownMenu>
                                 <DropdownMenuTrigger
@@ -116,59 +200,15 @@ export default function Header({ theme, onToggleTheme, view, onViewChange, user,
                 </div>
 
                 <div className="flex p-1 bg-muted/50 rounded-xl gap-1">
-                    <button
-                        onClick={() => onViewChange("search")}
-                        className={cn(
-                            "flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-[11px] font-mono uppercase tracking-wider transition-all",
-                            view === "search" 
-                                ? "bg-background text-primary shadow-sm font-bold" 
-                                : "text-muted-foreground hover:text-foreground hover:bg-background/50"
-                        )}
-                    >
-                        <Search className="size-3.5" />
-                        <span className="hidden sm:inline">Cautare</span>
-                    </button>
-                    <button
-                        onClick={() => onViewChange("calculator")}
-                        className={cn(
-                            "flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-[11px] font-mono uppercase tracking-wider transition-all",
-                            view === "calculator" 
-                                ? "bg-background text-primary shadow-sm font-bold" 
-                                : "text-muted-foreground hover:text-foreground hover:bg-background/50"
-                        )}
-                    >
-                        <Calculator className="size-3.5" />
-                        <span className="hidden sm:inline">Calculator</span>
-                    </button>
-                    
-                    {user ? (
-                        <button
-                            onClick={() => onViewChange("notes")}
-                            className={cn(
-                                "flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-[11px] font-mono uppercase tracking-wider transition-all",
-                                view === "notes" 
-                                    ? "bg-background text-primary shadow-sm font-bold" 
-                                    : "text-muted-foreground hover:text-foreground hover:bg-background/50"
-                            )}
-                        >
-                            <StickyNote className="size-3.5" />
-                            <span className="hidden sm:inline">Note</span>
-                        </button>
-                    ) : (
-                        <div className="flex-1 relative group">
-                            <button
-                                disabled
-                                className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-[11px] font-mono uppercase tracking-wider transition-all opacity-40 grayscale cursor-not-allowed bg-repeating-linear-gradient"
-                            >
-                                <Lock className="size-3.5" />
-                                <span className="hidden sm:inline">Note</span>
-                            </button>
-                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-50 bg-foreground text-background text-[10px] font-mono uppercase tracking-widest px-3 py-1.5 rounded-md whitespace-nowrap shadow-xl">
-                                In lucru / Login necesar
-                                <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-foreground" />
-                            </div>
-                        </div>
-                    )}
+                    {TABS.map((tab) => (
+                        <NavTab
+                            key={tab.view}
+                            tab={tab}
+                            activeView={view}
+                            locked={Boolean(tab.requiresAuth) && !user}
+                            onClick={() => onViewChange(tab.view)}
+                        />
+                    ))}
                 </div>
             </header>
         </TooltipProvider>
