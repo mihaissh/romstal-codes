@@ -10,19 +10,23 @@ import Notes from "@/components/Notes";
 import Profile from "@/components/Profile";
 import Stoc from "@/components/Stoc";
 import Auth from "@/components/Auth";
+import AboutModal from "@/components/AboutModal";
+import Scanner from "@/components/Scanner";
 import { useSearchHistory } from "@/hooks/useSearchHistory";
 import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/hooks/useAuth";
+import { searchSupabase } from "@/utils/search";
 import type { Product } from "@/types/Product";
 
 type StoreCode = "1BN1" | "1BV1";
-type View = "search" | "calculator" | "notes" | "profile" | "stoc";
+type View = "search" | "calculator" | "notes" | "profile" | "stoc" | "scan";
 
 export default function App() {
     const { theme, toggle: toggleTheme } = useTheme();
     const { user, profile, signOut } = useAuth();
     const [view, setView] = useState<View>("search");
     const [showAuth, setShowAuth] = useState(false);
+    const [showAbout, setShowAbout] = useState(false);
 
     const handleLogout = async () => {
         await signOut();
@@ -66,6 +70,17 @@ export default function App() {
         setQuery("");
     };
 
+    const handleScanSuccess = async (code: string) => {
+        const results = await searchSupabase(code, { maxCodeResults: 1 });
+        if (results.codeResults.length > 0) {
+            handleSelectProduct(results.codeResults[0].product);
+            setView("search");
+        } else {
+            setQuery(code);
+            setView("search");
+        }
+    };
+
     return (
         <div className="min-h-screen px-5 sm:px-6 flex flex-col">
             <div className="max-w-2xl mx-auto flex-1 w-full pb-10">
@@ -78,9 +93,11 @@ export default function App() {
                     profile={profile}
                     onLoginClick={() => setShowAuth(true)}
                     onLogout={handleLogout}
+                    onAboutClick={() => setShowAbout(true)}
                 />
 
                 {showAuth && <Auth onClose={() => setShowAuth(false)} />}
+                {showAbout && <AboutModal onClose={() => setShowAbout(false)} />}
 
                 {view === "search" && (
                     <div key="search-view">
@@ -131,6 +148,12 @@ export default function App() {
                 {view === "stoc" && (
                     <div key="stoc-view" className="pt-2">
                         <Stoc />
+                    </div>
+                )}
+
+                {view === "scan" && (
+                    <div key="scan-view" className="pt-2">
+                        <Scanner onScanSuccess={handleScanSuccess} />
                     </div>
                 )}
             </div>
