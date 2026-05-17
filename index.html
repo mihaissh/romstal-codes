@@ -24,6 +24,35 @@
     </script>
   </head>
   <body>
+    <div id="initial-loader" style="position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; transition: opacity 0.5s ease-out; background-color: #e5e0d9;">
+      <script>
+        (function() {
+          var theme = localStorage.getItem('theme');
+          var isDark = theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          if (isDark) {
+            document.getElementById('initial-loader').style.backgroundColor = '#302c27';
+          }
+          if (sessionStorage.getItem('app_loaded')) {
+            document.getElementById('initial-loader').style.display = 'none';
+          }
+        })();
+      </script>
+      <style>
+        .fancy-spinner {
+          width: 64px;
+          height: 64px;
+          margin-bottom: 2rem;
+          filter: drop-shadow(0 0 10px rgba(227, 6, 19, 0.2));
+        }
+        .dark .fancy-spinner {
+          filter: invert(1) brightness(1.5) drop-shadow(0 0 15px rgba(255, 255, 255, 0.2));
+        }
+      </style>
+      <img src="https://api.iconify.design/svg-spinners:blocks-shuffle-3.svg" class="fancy-spinner" alt="Loading..." />
+      <p style="margin-top: 1rem; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.2em; color: #ffffff; opacity: 0.8; text-shadow: 0 0 10px rgba(255,255,255,0.2);">
+        Romstal Companion
+      </p>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

@@ -34,7 +34,6 @@ export async function searchSupabase(
 
     try {
         if (isCode) {
-            // 1. Search by code prefix
             const { data: codeData } = await supabase
                 .from('products')
                 .select('*')
@@ -56,16 +55,10 @@ export async function searchSupabase(
             }
         }
 
-        // 2. Search by tokens (Full Text Search)
-        // We use the 'tokens' array column with the 'overlaps' operator or similar
-        // For better performance, we can use a simple ilike on the name for now
-        // or a more complex RPC if needed. Let's start with a smart ILIKE.
-        
         const searchTerms = trimmed.split(/\s+/).filter(t => t.length > 1);
         if (searchTerms.length > 0) {
             let tokenQuery = supabase.from('products').select('*');
             
-            // Apply all tokens as filters (AND logic)
             searchTerms.forEach(term => {
                 tokenQuery = tokenQuery.ilike('name', `%${term}%`);
             });
@@ -79,7 +72,6 @@ export async function searchSupabase(
                 .limit(maxTokenResults);
 
             if (tokenData) {
-                // Filter out results already in codeResults
                 const codeSet = new Set(codeResults.map(r => r.product.code));
                 tokenResults = tokenData
                     .filter(p => !codeSet.has(p.code))

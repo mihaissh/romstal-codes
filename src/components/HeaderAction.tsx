@@ -15,8 +15,8 @@ export default function HeaderAction({ onClick, icon, label, description, classN
         <Tooltip>
             <TooltipTrigger
                 className={cn(
-                    buttonVariants({ variant: "ghost", size: "icon" }),
-                    "rounded-full",
+                    buttonVariants({ variant: "outline", size: "icon" }),
+                    "rounded-full bg-background/50 shadow-sm",
                     className
                 )}
                 onClick={onClick}

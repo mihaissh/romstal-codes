@@ -32,7 +32,7 @@ function SearchHistoryComponent({ history, historyItems, onSelectProduct, onDele
                 <span className="text-[10px] font-mono font-bold text-muted-foreground/60 uppercase tracking-[0.15em]">
                     Recente
                 </span>
-                <Button variant="ghost" size="xs" onClick={onClearAll} className="text-muted-foreground/50 hover:text-destructive text-[10px] font-mono tracking-wider uppercase">
+                <Button variant="outline" size="xs" onClick={onClearAll} className="text-muted-foreground/50 hover:text-destructive text-[10px] font-mono tracking-wider uppercase bg-background/50 shadow-sm">
                     Sterge
                 </Button>
             </div>
@@ -48,7 +48,7 @@ function SearchHistoryComponent({ history, historyItems, onSelectProduct, onDele
                         >
                             <button
                                 onClick={(e) => { e.stopPropagation(); onDeleteItem(p.code); }}
-                                className="absolute top-2.5 right-2.5 p-0.5 rounded text-muted-foreground/20 hover:text-destructive opacity-0 group-hover:opacity-100 transition-all"
+                                className="absolute top-2.5 right-2.5 p-1 rounded-full border border-border bg-background/80 text-muted-foreground/40 hover:text-destructive hover:border-destructive/30 opacity-0 group-hover:opacity-100 transition-all shadow-sm"
                             >
                                 <X className="size-3" />
                             </button>

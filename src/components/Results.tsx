@@ -50,7 +50,7 @@ function ResultsComponent({ product, onClear }: Props) {
                     {product.name}
                 </CardTitle>
                 <CardAction>
-                    <Button variant="ghost" size="icon-sm" onClick={onClear} className="rounded-full">
+                    <Button variant="outline" size="icon-sm" onClick={onClear} className="rounded-full bg-background/50 shadow-sm">
                         <X className="size-4" />
                     </Button>
                 </CardAction>

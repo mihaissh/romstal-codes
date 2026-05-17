@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { Info } from "lucide-react";
 import SearchBar from "@/components/SearchBar";
 import Results from "@/components/Results";
 import SearchHistory from "@/components/SearchHistory";
@@ -27,6 +28,28 @@ export default function App() {
     const [view, setView] = useState<View>("search");
     const [showAuth, setShowAuth] = useState(false);
     const [showAbout, setShowAbout] = useState(false);
+    const [isAppReady, setIsAppReady] = useState(false);
+
+    useEffect(() => {
+        const isFirstLoad = !sessionStorage.getItem("app_loaded");
+        
+        if (isFirstLoad) {
+            const timer = setTimeout(() => {
+                setIsAppReady(true);
+                sessionStorage.setItem("app_loaded", "true");
+                const loader = document.getElementById("initial-loader");
+                if (loader) {
+                    loader.style.opacity = "0";
+                    setTimeout(() => loader.remove(), 500);
+                }
+            }, 2000);
+            return () => clearTimeout(timer);
+        } else {
+            setIsAppReady(true);
+            const loader = document.getElementById("initial-loader");
+            if (loader) loader.remove();
+        }
+    }, []);
 
     const handleLogout = async () => {
         await signOut();
@@ -81,6 +104,8 @@ export default function App() {
         }
     };
 
+    if (!isAppReady) return null;
+
     return (
         <div className="min-h-screen px-5 sm:px-6 flex flex-col">
             <div className="max-w-2xl mx-auto flex-1 w-full pb-10">
@@ -101,28 +126,23 @@ export default function App() {
 
                 {view === "search" && (
                     <div key="search-view">
-                        {/* Selectors */}
                         <div className="flex items-center gap-2 mb-6 animate-fade-up" style={{ animationDelay: "80ms" }}>
                             <StoreSelector currentStore={currentStore} onStoreSelect={handleStoreSelect} />
                             <StorageSelector currentStorage={currentStorage} onStorageSelect={handleStorageSelect} availableStorages={availableStorages} />
                         </div>
 
-                        {/* Divider */}
                         <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent mb-6" />
 
-                        {/* Search */}
                         <div className="relative z-50 mb-8 animate-fade-up" style={{ animationDelay: "120ms" }}>
                             <SearchBar query={query} onChange={setQuery} onSelect={handleSelectProduct} category={null} />
                         </div>
 
-                        {/* Product detail */}
                         {selected && (
                             <div className="mb-8">
                                 <Results product={selected} onClear={() => setSelected(null)} />
                             </div>
                         )}
 
-                        {/* History */}
                         {!selected && <SearchHistory history={history} historyItems={historyItems} onSelectProduct={handleSelectProduct} onDeleteItem={removeFromHistory} onClearAll={clearHistory} />}
                     </div>
                 )}
@@ -158,15 +178,24 @@ export default function App() {
                 )}
             </div>
 
-            {/* Footer */}
-            <footer className="py-6 text-center">
-                <p className="text-[10px] font-mono text-muted-foreground/30 tracking-wider">
-                    built by{" "}
-                    <a href="https://github.com/mihaissh" target="_blank" rel="noopener noreferrer"
-                       className="text-muted-foreground/50 hover:text-primary transition-colors underline underline-offset-2 decoration-border hover:decoration-primary">
-                        mihaissh
-                    </a>
-                </p>
+            <footer className="py-6 text-center space-y-3">
+                <div className="flex items-center justify-center gap-3">
+                    <button 
+                        onClick={() => setShowAbout(true)}
+                        className="text-[10px] font-mono text-muted-foreground/40 hover:text-primary transition-colors flex items-center gap-1.5 uppercase tracking-widest"
+                    >
+                        <Info className="size-3" />
+                        Despre Proiect
+                    </button>
+                    <span className="size-1 rounded-full bg-border" />
+                    <p className="text-[10px] font-mono text-muted-foreground/30 tracking-wider">
+                        built by{" "}
+                        <a href="https://github.com/mihaissh" target="_blank" rel="noopener noreferrer"
+                           className="text-muted-foreground/50 hover:text-primary transition-colors underline underline-offset-2 decoration-border hover:decoration-primary">
+                            mihaissh
+                        </a>
+                    </p>
+                </div>
             </footer>
         </div>
     );
