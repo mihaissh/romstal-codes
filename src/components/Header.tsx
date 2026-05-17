@@ -1,4 +1,4 @@
-import { Moon, Sun, Calculator, Search, StickyNote, User, LogOut, Settings, Package, ChevronDown, Lock, Info, Scan } from "lucide-react";
+import { Moon, Sun, Calculator, Search, StickyNote, User, LogOut, Settings, Package, ChevronDown, Lock, Info, Scan, Globe } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
@@ -75,7 +75,7 @@ interface NavTabProps {
 
 function NavTab({ tab, activeView, locked, onClick }: NavTabProps) {
     const baseTab =
-        "flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-[11px] font-mono uppercase tracking-wider transition-all";
+        "flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-[11px] font-mono uppercase tracking-wider transition-all border border-transparent";
 
     if (locked) {
         return (
@@ -106,8 +106,8 @@ function NavTab({ tab, activeView, locked, onClick }: NavTabProps) {
             className={cn(
                 baseTab,
                 activeView === tab.view
-                    ? "bg-background text-primary shadow-sm font-bold"
-                    : "text-muted-foreground hover:text-foreground hover:bg-background/50",
+                    ? "bg-background text-primary shadow-sm font-bold border-border"
+                    : "text-muted-foreground hover:text-foreground hover:bg-background/50 hover:border-border/50",
             )}
         >
             {tab.icon}
@@ -134,9 +134,10 @@ export default function Header({ theme, onToggleTheme, view, onViewChange, user,
                     </div>
                     <div className="flex items-center gap-1">
                         <HeaderAction
-                            icon={<Info className="size-[18px]" />}
-                            label="Despre proiect"
-                            onClick={onAboutClick}
+                            icon={<Globe className="size-[18px]" />}
+                            label="Romstal Website"
+                            description="catre romstal"
+                            onClick={() => window.open("https://www.romstal.ro/", "_blank")}
                             className="text-muted-foreground hover:text-primary"
                         />
 
@@ -150,8 +151,8 @@ export default function Header({ theme, onToggleTheme, view, onViewChange, user,
                             <DropdownMenu>
                                 <DropdownMenuTrigger
                                     className={cn(
-                                        buttonVariants({ variant: "ghost", size: "sm" }),
-                                        "rounded-full gap-2 text-primary hover:text-primary/80 px-3 font-bold"
+                                        buttonVariants({ variant: "outline", size: "sm" }),
+                                        "rounded-full gap-2 text-primary hover:text-primary/80 px-3 font-bold bg-background/50 shadow-sm"
                                     )}
                                 >
                                     {profile?.avatar_url ? (
@@ -187,10 +188,10 @@ export default function Header({ theme, onToggleTheme, view, onViewChange, user,
                             </DropdownMenu>
                         ) : (
                             <Button
-                                variant="ghost"
+                                variant="outline"
                                 size="sm"
                                 onClick={onLoginClick}
-                                className="rounded-full gap-2 text-muted-foreground hover:text-primary px-3"
+                                className="rounded-full gap-2 text-muted-foreground hover:text-primary px-3 bg-background/50 shadow-sm"
                             >
                                 <User className="size-[18px]" />
                                 <span className="text-[11px] font-mono uppercase tracking-wider">Login</span>

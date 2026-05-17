@@ -13,14 +13,12 @@ export function useAuth() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Check active sessions and sets the user
         supabase.auth.getSession().then(({ data: { session } }) => {
             setUser(session?.user ?? null);
             if (session?.user) fetchProfile(session.user.id);
             else setLoading(false);
         });
 
-        // Listen for changes on auth state (logged in, signed out, etc.)
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
             setUser(session?.user ?? null);
             if (session?.user) fetchProfile(session.user.id);
@@ -61,8 +59,6 @@ export function useAuth() {
             const { error } = await supabase.auth.signOut();
             if (error) {
                 console.error("Sign out error:", error);
-                // If the server rejects the logout (e.g. session already gone), 
-                // we still want to clear the local state.
                 setUser(null);
                 setProfile(null);
             }

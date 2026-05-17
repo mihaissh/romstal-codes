@@ -1,62 +1,18 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { RotateCcw, X, History } from "lucide-react";
+import { RotateCcw } from "lucide-react";
 import { useCalculatorHistory, type CalculationEntry, type CalculationKind } from "@/hooks/useCalculatorHistory";
+import { parseAmount, formatAmount } from "@/utils/calculator";
+import CalculatorField from "./calculator/CalculatorField";
+import ResultPanel from "./calculator/ResultPanel";
+import CalculationHistory from "./calculator/CalculationHistory";
 
-function parseAmount(value: string): number | null {
-    if (!value.trim()) return null;
-    // Romanian: "." is thousands separator, "," is decimal separator.
-    // Strip thousand dots, then convert decimal comma to dot.
-    const cleaned = value.replace(/\s+/g, "").replace(/\.(?=\d{3}(\D|$))/g, "").replace(",", ".");
-    const n = Number(cleaned);
-    if (!Number.isFinite(n)) return null;
-    return n;
+interface Result { 
+    kind: CalculationKind; 
+    amount: number; 
+    cost: number; 
+    given: number; 
 }
-
-const numberFormatter = new Intl.NumberFormat("ro-RO", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-});
-
-const DENOMINATIONS = [
-    { value: 500, label: "500 lei", image: "/images/money/500 lei.jpg" },
-    { value: 200, label: "200 lei", image: "/images/money/200_lei._Romania,_2006_a.jpg" },
-    { value: 100, label: "100 lei", image: "/images/money/100_lei._Romania.jpg" },
-    { value: 50, label: "50 lei", image: "/images/money/50_lei._Romania,_2005_a.jpg" },
-    { value: 20, label: "20 lei", image: "/images/money/20_lei._Romania,_2021_a.jpg" },
-    { value: 10, label: "10 lei", image: "/images/money/10_lei.jpg" },
-    { value: 5, label: "5 lei", image: "/images/money/5_lei._Romania,_2005_a.jpg" },
-    { value: 1, label: "1 leu", image: "/images/money/1_leu._Romania,_2005_a.jpg" },
-    { value: 0.5, label: "50 bani", image: null },
-    { value: 0.1, label: "10 bani", image: null },
-    { value: 0.05, label: "5 bani", image: null },
-    { value: 0.01, label: "1 ban", image: null },
-];
-
-function getChangeBreakdown(amount: number) {
-    const breakdown: { value: number; count: number; label: string; image: string | null }[] = [];
-    let remaining = Math.round(amount * 100);
-
-    for (const den of DENOMINATIONS) {
-        const denValue = Math.round(den.value * 100);
-        const count = Math.floor(remaining / denValue);
-        if (count > 0) {
-            breakdown.push({ ...den, count });
-            remaining -= count * denValue;
-        }
-    }
-    return breakdown;
-}
-
-function formatAmount(n: number): string {
-    return numberFormatter.format(n);
-}
-
-function formatLei(n: number): string {
-    return `${formatAmount(n)} lei`;
-}
-
-interface Result { kind: CalculationKind; amount: number; cost: number; given: number; }
 
 export default function ChangeCalculator() {
     const [cost, setCost] = useState("");
@@ -111,7 +67,7 @@ export default function ChangeCalculator() {
         <div className="animate-fade-up" style={{ animationDelay: "80ms" }}>
             <div className="rounded-2xl border border-border bg-card/60 dark:bg-card/40 dark:backdrop-blur-sm shadow-sm p-5 sm:p-6">
                 <div className="space-y-4">
-                    <Field
+                    <CalculatorField
                         inputRef={costRef}
                         label="Cost total"
                         hint="Suma de plata"
@@ -119,7 +75,7 @@ export default function ChangeCalculator() {
                         onChange={setCost}
                         onKeyDown={handleKeyDown}
                     />
-                    <Field
+                    <CalculatorField
                         label="Bani primiti"
                         hint="Suma data de client"
                         value={given}
@@ -157,200 +113,6 @@ export default function ChangeCalculator() {
             <p className="mt-4 text-[11px] font-mono text-muted-foreground/60 text-center tracking-wider">
                 toate sumele sunt in lei (RON)
             </p>
-        </div>
-    );
-}
-
-interface FieldProps {
-    label: string;
-    hint: string;
-    value: string;
-    onChange: (v: string) => void;
-    onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
-    inputRef?: React.RefObject<HTMLInputElement | null>;
-}
-
-function Field({ label, hint, value, onChange, onKeyDown, inputRef }: FieldProps) {
-    return (
-        <label className="block">
-            <div className="flex items-baseline justify-between mb-1.5">
-                <span className="text-sm font-semibold text-foreground">{label}</span>
-                <span className="text-[10px] font-mono text-muted-foreground/60 tracking-wider uppercase">{hint}</span>
-            </div>
-            <div className="relative">
-                <input
-                    ref={inputRef}
-                    type="text"
-                    inputMode="decimal"
-                    autoComplete="off"
-                    value={value}
-                    onChange={(e) => onChange(e.target.value)}
-                    onKeyDown={onKeyDown}
-                    placeholder="0,00"
-                    className="w-full h-12 rounded-lg border border-input bg-card pl-4 pr-12 text-lg font-semibold text-foreground placeholder:text-muted-foreground/40 placeholder:font-normal tabular-nums transition-all focus-visible:outline-none focus-visible:border-primary/50 focus-visible:ring-[3px] focus-visible:ring-primary/10 focus-visible:shadow-lg focus-visible:shadow-primary/5 dark:bg-card/80 dark:backdrop-blur-sm"
-                />
-                <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-mono font-bold text-muted-foreground/50 tracking-wider pointer-events-none">
-                    lei
-                </span>
-            </div>
-        </label>
-    );
-}
-
-const RESULT_CONFIG: Record<CalculationKind, { label: string; cls: string; valueCls: string; prefix: string }> = {
-    ok:    { label: "Rest de dat",       cls: "bg-tag-category-bg text-tag-category-text border-tag-category-text/20",     valueCls: "text-tag-category-text",  prefix: "" },
-    exact: { label: "Suma exacta",       cls: "bg-tag-dimension-bg text-tag-dimension-text border-tag-dimension-text/20",  valueCls: "text-tag-dimension-text", prefix: "" },
-    short: { label: "Suma insuficienta", cls: "bg-destructive/10 text-destructive border-destructive/20",                  valueCls: "text-destructive",        prefix: "Lipsesc " },
-};
-
-function ResultPanel({ result }: { result: Result }) {
-    const c = RESULT_CONFIG[result.kind];
-    const breakdown = useMemo(() => 
-        result.kind === "ok" ? getChangeBreakdown(result.amount) : [], 
-    [result]);
-
-    return (
-        <div className="space-y-4 animate-scale-in">
-            <div className={`mt-5 rounded-xl border ${c.cls} px-4 py-4`}>
-                <div className="flex items-center justify-between">
-                    <div className="text-[10px] font-mono font-bold tracking-[0.2em] uppercase opacity-70">
-                        {c.label}
-                    </div>
-                    <div className="text-[10px] font-mono tabular-nums opacity-60">
-                        {formatAmount(result.given)} − {formatAmount(result.cost)}
-                    </div>
-                </div>
-                <div className={`mt-1 text-3xl sm:text-4xl font-bold tabular-nums ${c.valueCls}`}>
-                    {c.prefix}{formatAmount(result.amount)} <span className="text-base font-mono font-semibold opacity-70">lei</span>
-                </div>
-            </div>
-
-            {breakdown.length > 0 && (
-                <div className="space-y-2">
-                    <div className="text-[10px] font-mono font-bold text-muted-foreground/60 uppercase tracking-widest px-1">
-                        Bancnote si monede:
-                    </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                        {breakdown.map((item, i) => (
-                            <div 
-                                key={item.value} 
-                                className="bg-card/40 border border-border rounded-xl p-2 flex flex-col items-center text-center animate-fade-up"
-                                style={{ animationDelay: `${(i + 1) * 50}ms` }}
-                            >
-                                <div className="relative w-full aspect-[2/1] mb-1.5 flex items-center justify-center bg-muted/20 rounded-lg overflow-hidden shadow-sm group">
-                                    {item.image ? (
-                                        <img 
-                                            src={item.image} 
-                                            alt={item.label} 
-                                            className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-110"
-                                        />
-                                    ) : (
-                                        <div className="text-[10px] font-mono text-muted-foreground/40 uppercase">
-                                            {item.label}
-                                        </div>
-                                    )}
-                                    <div className="absolute -top-0.5 -right-0.5 bg-primary text-primary-foreground text-[10px] font-black px-1.5 py-0.5 rounded-bl-lg rounded-tr-lg shadow-sm">
-                                        x{item.count}
-                                    </div>
-                                </div>
-                                <div className="text-[9px] font-mono font-bold uppercase tracking-tighter text-muted-foreground truncate w-full">
-                                    {item.label}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
-        </div>
-    );
-}
-
-interface HistoryProps {
-    items: CalculationEntry[];
-    onReuse: (entry: CalculationEntry) => void;
-    onRemove: (id: string) => void;
-    onClear: () => void;
-}
-
-function CalculationHistory({ items, onReuse, onRemove, onClear }: HistoryProps) {
-    if (items.length === 0) return null;
-
-    return (
-        <div className="mt-6 animate-fade-up" style={{ animationDelay: "160ms" }}>
-            <div className="flex items-center justify-between mb-3 px-1">
-                <div className="flex items-center gap-2">
-                    <History className="size-3.5 text-muted-foreground/70" />
-                    <span className="text-[10px] font-mono font-bold text-muted-foreground/70 uppercase tracking-[0.15em]">
-                        Istoric ({items.length})
-                    </span>
-                </div>
-                <button
-                    onClick={onClear}
-                    className="text-[10px] font-mono text-muted-foreground/60 hover:text-destructive tracking-wider uppercase transition-colors"
-                >
-                    Sterge tot
-                </button>
-            </div>
-
-            <div className="rounded-xl border border-border bg-card/40 dark:bg-card/30 dark:backdrop-blur-sm overflow-hidden divide-y divide-border">
-                {items.map((entry, i) => (
-                    <HistoryRow
-                        key={entry.id}
-                        entry={entry}
-                        index={i}
-                        onReuse={() => onReuse(entry)}
-                        onRemove={() => onRemove(entry.id)}
-                    />
-                ))}
-            </div>
-        </div>
-    );
-}
-
-interface HistoryRowProps {
-    entry: CalculationEntry;
-    index: number;
-    onReuse: () => void;
-    onRemove: () => void;
-}
-
-function HistoryRow({ entry, index, onReuse, onRemove }: HistoryRowProps) {
-    const c = RESULT_CONFIG[entry.kind];
-    const displayAmount = Math.abs(entry.change);
-    return (
-        <div
-            onClick={onReuse}
-            style={{ animationDelay: `${index * 25}ms` }}
-            className="group flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-accent/50 transition-colors animate-entry"
-        >
-            <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                    <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-bold leading-none ${c.cls}`}>
-                        {c.label}
-                    </span>
-                    <span className="text-[10px] font-mono text-muted-foreground/50 tabular-nums">
-                        {new Date(entry.timestamp).toLocaleString("ro-RO", {
-                            day: "2-digit",
-                            month: "2-digit",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                        })}
-                    </span>
-                </div>
-                <div className="mt-1 text-[11px] font-mono text-muted-foreground/70 tabular-nums truncate">
-                    {formatAmount(entry.given)} − {formatAmount(entry.cost)} =
-                </div>
-            </div>
-            <div className={`flex-shrink-0 text-sm font-bold tabular-nums ${c.valueCls}`}>
-                {c.prefix}{formatLei(displayAmount)}
-            </div>
-            <button
-                onClick={(e) => { e.stopPropagation(); onRemove(); }}
-                className="flex-shrink-0 p-1 rounded-md text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all"
-                aria-label="Sterge"
-            >
-                <X className="size-3.5" />
-            </button>
         </div>
     );
 }

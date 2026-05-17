@@ -13,7 +13,6 @@ export function useSearchHistory(storeCode: string) {
   const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
   const historyKey = `${HISTORY_KEY_PREFIX}${storeCode}`;
 
-  // Load history from localStorage on mount or when store changes
   useEffect(() => {
     try {
       const stored = localStorage.getItem(historyKey);
@@ -29,7 +28,6 @@ export function useSearchHistory(storeCode: string) {
     }
   }, [storeCode, historyKey]);
 
-  // Save history to localStorage whenever it changes
   useEffect(() => {
     try {
       localStorage.setItem(historyKey, JSON.stringify(historyItems));
