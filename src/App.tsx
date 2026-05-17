@@ -118,7 +118,6 @@ export default function App() {
                     profile={profile}
                     onLoginClick={() => setShowAuth(true)}
                     onLogout={handleLogout}
-                    onAboutClick={() => setShowAbout(true)}
                 />
 
                 {showAuth && <Auth onClose={() => setShowAuth(false)} />}

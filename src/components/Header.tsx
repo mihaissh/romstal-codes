@@ -1,4 +1,4 @@
-import { Moon, Sun, Calculator, Search, StickyNote, User, LogOut, Settings, Package, ChevronDown, Lock, Info, Scan, Globe } from "lucide-react";
+import { Moon, Sun, Calculator, Search, StickyNote, User, LogOut, Settings, Package, ChevronDown, Lock, Scan, Globe } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
@@ -27,7 +27,6 @@ interface Props {
     profile: { full_name: string | null; avatar_url: string | null } | null;
     onLoginClick: () => void;
     onLogout: () => void;
-    onAboutClick: () => void;
 }
 
 const LABELS: Record<View, string> = {
@@ -116,7 +115,7 @@ function NavTab({ tab, activeView, locked, onClick }: NavTabProps) {
     );
 }
 
-export default function Header({ theme, onToggleTheme, view, onViewChange, user, profile, onLoginClick, onLogout, onAboutClick }: Props) {
+export default function Header({ theme, onToggleTheme, view, onViewChange, user, profile, onLoginClick, onLogout }: Props) {
     return (
         <TooltipProvider>
             <header className="pt-8 sm:pt-12 pb-4 space-y-6 animate-slide-down">
