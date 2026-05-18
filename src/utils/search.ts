@@ -19,13 +19,14 @@ export async function searchSupabase(
         category?: string | null;
         maxCodeResults?: number;
         maxTokenResults?: number;
+        exactCodeOnly?: boolean;
     } = {}
 ): Promise<SearchOutput> {
     if (!query || query.trim().length === 0) {
         return { codeResults: [], tokenResults: [], total: 0 };
     }
 
-    const { category = null, maxCodeResults = 5, maxTokenResults = 20 } = options;
+    const { category = null, maxCodeResults = 5, maxTokenResults = 20, exactCodeOnly = false } = options;
     const trimmed = query.trim().toLowerCase();
     const isCode = /^\d/.test(trimmed);
 
@@ -34,10 +35,17 @@ export async function searchSupabase(
 
     try {
         if (isCode) {
-            const { data: codeData } = await supabase
+            let codeQuery = supabase
                 .from('products')
-                .select('*')
-                .ilike('code', `${trimmed}%`)
+                .select('*');
+                
+            if (exactCodeOnly) {
+                codeQuery = codeQuery.eq('code', trimmed);
+            } else {
+                codeQuery = codeQuery.ilike('code', `${trimmed}%`);
+            }
+
+            const { data: codeData } = await codeQuery
                 .order('stock', { ascending: false })
                 .limit(maxCodeResults);
 

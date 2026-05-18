@@ -1,202 +1,505 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useLayoutEffect, useCallback, useRef } from "react";
+import { createPortal } from "react-dom";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardContent, CardAction } from "@/components/ui/card";
-import { Plus, Edit2, X, Check, Phone, AlertCircle } from "lucide-react";
+import { Edit3, X, Phone, AlertCircle, FileText, User, Hash, Tag, AlignLeft, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { Note, NoteTag } from "@/hooks/useNotes";
+import type { Note, NoteTag, DocumentType } from "@/hooks/useNotes";
 
-const AVAILABLE_TAGS: NoteTag[] = ["platit", "neplatit", "livrare curier", "livrare marfa", "ridica client", "SPEDEX"];
+// ─────────────────────────────────────────────────────────────
+// Constants
+// ─────────────────────────────────────────────────────────────
+
+const AVAILABLE_TAGS: NoteTag[] = [
+    "platit", "neplatit", "livrare curier", "livrare marfa",
+    "ridica client", "SPEDEX", "emisa", "ne emisa",
+];
 
 const TAG_COLORS: Record<NoteTag, string> = {
-    "platit": "bg-tag-category-bg text-tag-category-text border-tag-category-text/20",
-    "neplatit": "bg-tag-color-bg text-tag-color-text border-tag-color-text/20",
-    "livrare curier": "bg-tag-material-bg text-tag-material-text border-tag-material-text/20",
-    "livrare marfa": "bg-tag-material-bg text-tag-material-text border-tag-material-text/20",
-    "ridica client": "bg-tag-dimension-bg text-tag-dimension-text border-tag-dimension-text/20",
-    "SPEDEX": "bg-primary text-primary-foreground border-primary/20",
+    "platit": "bg-tag-category-bg text-tag-category-text border-tag-category-text/30",
+    "neplatit": "bg-tag-color-bg text-tag-color-text border-tag-color-text/30",
+    "livrare curier": "bg-tag-material-bg text-tag-material-text border-tag-material-text/30",
+    "livrare marfa": "bg-tag-material-bg text-tag-material-text border-tag-material-text/30",
+    "ridica client": "bg-tag-dimension-bg text-tag-dimension-text border-tag-dimension-text/30",
+    "SPEDEX": "bg-primary text-primary-foreground border-primary/30",
+    "emisa": "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/30",
+    "ne emisa": "bg-destructive/10 text-destructive border-destructive/30",
+};
+
+export const DOCUMENT_TYPES: DocumentType[] = ["Factura", "Nota Livrare", "Proforma", "Oferta", "Altele"];
+
+/** Wait for backdrop (200ms) / panel (300ms) transitions before unmount */
+const CLOSE_UNMOUNT_MS = 340;
+
+export const DOC_COLORS: Record<DocumentType, string> = {
+    "Factura": "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/40",
+    "Nota Livrare": "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/40",
+    "Proforma": "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/40",
+    "Oferta": "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/40",
+    "Altele": "bg-muted/50 text-muted-foreground border-border",
+};
+
+// ─────────────────────────────────────────────────────────────
+// Types
+// ─────────────────────────────────────────────────────────────
+
+interface FormState {
+    nume: string;
+    client: string;
+    orderOrInvoice: string;
+    documentType: DocumentType;
+    phoneNumber: string;
+    text: string;
+    selectedTags: NoteTag[];
+}
+
+const INITIAL_STATE: FormState = {
+    nume: "",
+    client: "",
+    orderOrInvoice: "",
+    documentType: "Factura",
+    phoneNumber: "",
+    text: "",
+    selectedTags: [],
 };
 
 interface NoteModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSubmit: (noteData: any) => Promise<void>;
+    onDelete?: (id: string) => void;
     editingNote: Note | null;
     error: string | null;
 }
 
-export default function NoteModal({ isOpen, onClose, onSubmit, editingNote, error: externalError }: NoteModalProps) {
-    const [nume, setNume] = useState("");
-    const [client, setClient] = useState("");
-    const [orderOrInvoice, setOrderOrInvoice] = useState("");
-    const [phoneNumber, setPhoneNumber] = useState("");
-    const [text, setText] = useState("");
-    const [selectedTags, setSelectedTags] = useState<NoteTag[]>([]);
-    const [error, setError] = useState<string | null>(null);
+// ─────────────────────────────────────────────────────────────
+// Sub-components
+// ─────────────────────────────────────────────────────────────
 
+interface FieldLabelProps {
+    icon: React.ReactNode;
+    children: React.ReactNode;
+}
+
+function FieldLabel({ icon, children }: FieldLabelProps) {
+    return (
+        <label className="flex items-center gap-2 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
+            <span className="opacity-70">{icon}</span>
+            {children}
+        </label>
+    );
+}
+
+interface SidebarSectionProps {
+    title: string;
+    icon: React.ReactNode;
+    children: React.ReactNode;
+}
+
+function SidebarSection({ title, icon, children }: SidebarSectionProps) {
+    return (
+        <div className="py-4 border-b border-border last:border-b-0">
+            <div className="flex items-center gap-2 mb-3">
+                <span className="text-muted-foreground">{icon}</span>
+                <h3 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    {title}
+                </h3>
+            </div>
+            {children}
+        </div>
+    );
+}
+
+// ─────────────────────────────────────────────────────────────
+// Main Component
+// ─────────────────────────────────────────────────────────────
+
+export default function NoteModal({
+    isOpen,
+    onClose,
+    onSubmit,
+    onDelete,
+    editingNote,
+    error: externalError,
+}: NoteModalProps) {
+    const [form, setForm] = useState<FormState>(INITIAL_STATE);
+    const [error, setError] = useState<string | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const titleInputRef = useRef<HTMLInputElement>(null);
+    const [mounted, setMounted] = useState(isOpen);
+    /** Enables enter transition without swapping animation keyframes (avoids close flicker). */
+    const [entered, setEntered] = useState(false);
+
+    /** Keep portal DOM until exit animations finish */
     useEffect(() => {
-        if (editingNote) {
-            setNume(editingNote.nume);
-            setClient(editingNote.client);
-            setOrderOrInvoice(editingNote.orderOrInvoice);
-            setPhoneNumber(editingNote.phone_number || "");
-            setText(editingNote.text || "");
-            setSelectedTags(editingNote.tags);
-        } else {
-            setNume("");
-            setClient("");
-            setOrderOrInvoice("");
-            setPhoneNumber("");
-            setText("");
-            setSelectedTags([]);
+        if (isOpen) {
+            setMounted(true);
+            return undefined;
         }
+        const tid = window.setTimeout(() => setMounted(false), CLOSE_UNMOUNT_MS);
+        return () => window.clearTimeout(tid);
+    }, [isOpen]);
+
+    useLayoutEffect(() => {
+        if (!mounted) return;
+        if (!isOpen) {
+            setEntered(false);
+            return;
+        }
+        setEntered(false);
+        let cancelled = false;
+        const raf = window.requestAnimationFrame(() => {
+            window.requestAnimationFrame(() => {
+                if (!cancelled) setEntered(true);
+            });
+        });
+        return () => {
+            cancelled = true;
+            window.cancelAnimationFrame(raf);
+        };
+    }, [mounted, isOpen]);
+
+    // ── Reset form when opening or switching note ──
+    useEffect(() => {
+        if (!isOpen) return;
+
+        if (editingNote) {
+            setForm({
+                nume: editingNote.nume,
+                client: editingNote.client,
+                orderOrInvoice: editingNote.orderOrInvoice,
+                documentType: editingNote.documentType || "Factura",
+                phoneNumber: editingNote.phone_number || "",
+                text: editingNote.text || "",
+                selectedTags: editingNote.tags,
+            });
+        } else {
+            setForm(INITIAL_STATE);
+        }
+        setError(null);
     }, [editingNote, isOpen]);
 
+    // ── Sync external error ──
     useEffect(() => {
         setError(externalError);
     }, [externalError]);
 
-    if (!isOpen) return null;
+    // ── Escape key handler ──
+    useEffect(() => {
+        if (!isOpen) return;
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") {
+                e.preventDefault();
+                onClose();
+            }
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [isOpen, onClose]);
+
+    // ── Body scroll lock (while portal is rendered, incl. closing animation) ──
+    useEffect(() => {
+        if (!mounted) return;
+
+        const originalOverflow = document.body.style.overflow;
+        document.body.style.overflow = "hidden";
+
+        return () => {
+            document.body.style.overflow = originalOverflow;
+        };
+    }, [mounted]);
+
+    // ── Auto-focus title on create ──
+    useEffect(() => {
+        if (isOpen && !editingNote) {
+            const timer = setTimeout(() => titleInputRef.current?.focus(), 250);
+            return () => clearTimeout(timer);
+        }
+    }, [isOpen, editingNote]);
+
+    // ── Handlers ──
+    const updateField = useCallback(<K extends keyof FormState>(key: K, value: FormState[K]) => {
+        setForm(prev => ({ ...prev, [key]: value }));
+    }, []);
+
+    const toggleTag = useCallback((tag: NoteTag) => {
+        setForm(prev => ({
+            ...prev,
+            selectedTags: prev.selectedTags.includes(tag)
+                ? prev.selectedTags.filter(t => t !== tag)
+                : [...prev.selectedTags, tag],
+        }));
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!nume || !client || !orderOrInvoice) return;
+        if (!form.nume || !form.client || !form.orderOrInvoice || isSubmitting) return;
 
-        const noteData = {
-            nume,
-            client,
-            orderOrInvoice,
-            phone_number: phoneNumber.trim() || undefined,
-            text: text.trim() || undefined,
-            tags: selectedTags,
-        };
-
-        await onSubmit(noteData);
+        setIsSubmitting(true);
+        try {
+            await onSubmit({
+                nume: form.nume,
+                client: form.client,
+                orderOrInvoice: form.orderOrInvoice,
+                documentType: form.documentType,
+                phone_number: form.phoneNumber.trim() || undefined,
+                text: form.text.trim() || undefined,
+                tags: form.selectedTags,
+            });
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
-    const toggleTag = (tag: NoteTag) => {
-        setSelectedTags(prev => 
-            prev.includes(tag) 
-                ? prev.filter(t => t !== tag) 
-                : [...prev, tag]
-        );
+    const handleDelete = () => {
+        if (!editingNote || !onDelete) return;
+        if (window.confirm("Sigur vrei sa stergi aceasta nota?")) {
+            onDelete(editingNote.id);
+            onClose();
+        }
     };
 
-    return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200">
-            <Card className="w-full max-w-lg shadow-2xl animate-scale-in max-h-[90vh] overflow-y-auto">
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-sm font-mono uppercase tracking-widest">
-                        {editingNote ? <Edit2 className="size-4 text-primary" /> : <Plus className="size-4 text-primary" />}
-                        {editingNote ? "Editeaza Nota" : "Adauga Nota Noua"}
-                    </CardTitle>
-                    <CardAction>
-                        <Button variant="outline" size="icon-sm" onClick={onClose} className="rounded-full bg-background/50 shadow-sm">
-                            <X className="size-4" />
-                        </Button>
-                    </CardAction>
-                </CardHeader>
-                <CardContent className="pt-4">
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <label className="text-[10px] uppercase tracking-wider font-mono text-muted-foreground ml-1">Nume</label>
+    const isFormValid = form.nume.trim() && form.client.trim() && form.orderOrInvoice.trim();
+
+    if (!mounted) return null;
+
+    const visuallyOpen = isOpen && entered;
+
+    // ── Render via Portal ──
+    return createPortal(
+        <div className="fixed inset-0 z-[100]" role="dialog" aria-modal="true">
+            {/* Backdrop: CSS transitions avoid animate-in/out class swap glitch on close */}
+            <div
+                className={cn(
+                    "absolute inset-0 bg-black/50 transition-opacity duration-200 ease-out",
+                    visuallyOpen ? "opacity-100" : "opacity-0",
+                )}
+                onClick={() => isOpen && onClose()}
+                aria-hidden="true"
+            />
+
+            {/* Side Panel */}
+            <aside
+                className={cn(
+                    "absolute inset-y-0 right-0 w-full sm:w-[540px] md:w-[600px] bg-card shadow-2xl flex flex-col",
+                    "transition-[transform] duration-300 ease-out motion-reduce:transition-none",
+                    visuallyOpen ? "translate-x-0" : "translate-x-full",
+                )}
+            >
+                <form onSubmit={handleSubmit} className="flex flex-col h-full">
+                    
+                    {/* ─── Header ─── */}
+                    <header className="shrink-0 px-5 pt-4 pb-3 border-b border-border bg-card">
+                        <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <span className={cn(
+                                        "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-[10px] font-bold uppercase tracking-wider",
+                                        DOC_COLORS[form.documentType]
+                                    )}>
+                                        <FileText className="size-3" />
+                                        {form.documentType}
+                                    </span>
+                                    {editingNote && (
+                                        <span className="text-[11px] font-mono text-muted-foreground">
+                                            #{form.orderOrInvoice || editingNote.orderOrInvoice}
+                                        </span>
+                                    )}
+                                </div>
                                 <Input
-                                    placeholder="Nume"
-                                    value={nume}
-                                    onChange={(e) => setNume(e.target.value)}
+                                    ref={titleInputRef}
+                                    placeholder="Titlu nota (nume produs / proiect)..."
+                                    value={form.nume}
+                                    onChange={(e) => updateField("nume", e.target.value)}
                                     required
+                                    className="h-9 text-base font-semibold border-transparent bg-transparent px-1 -ml-1 hover:bg-muted/40 focus:bg-background focus:border-border transition-colors"
                                 />
                             </div>
-                            <div className="space-y-2">
-                                <label className="text-[10px] uppercase tracking-wider font-mono text-muted-foreground ml-1">Client</label>
-                                <Input
-                                    placeholder="Client"
-                                    value={client}
-                                    onChange={(e) => setClient(e.target.value)}
-                                    required
-                                />
-                            </div>
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={onClose}
+                                className="rounded-md size-8 text-muted-foreground hover:text-foreground hover:bg-muted shrink-0"
+                                aria-label="Inchide"
+                            >
+                                <X className="size-4" />
+                            </Button>
                         </div>
+                    </header>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <label className="text-[10px] uppercase tracking-wider font-mono text-muted-foreground ml-1">OL / Factura</label>
-                                <Input
-                                    placeholder="OL / Factura"
-                                    value={orderOrInvoice}
-                                    onChange={(e) => setOrderOrInvoice(e.target.value.replace(/[^0-9]/g, ""))}
-                                    inputMode="numeric"
-                                    pattern="[0-9]*"
-                                    required
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-[10px] uppercase tracking-wider font-mono text-muted-foreground ml-1">Telefon (Optional)</label>
-                                <div className="relative">
-                                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+                    {/* ─── Body ─── */}
+                    <div className="flex-1 overflow-y-auto scrollbar-thin">
+                        <div className="grid md:grid-cols-[1fr_240px] gap-0">
+                            
+                            {/* ── Main Content ── */}
+                            <div className="px-5 py-5 space-y-5 md:border-r md:border-border">
+                                
+                                {/* Client */}
+                                <div>
+                                    <FieldLabel icon={<User className="size-3.5" />}>Client</FieldLabel>
                                     <Input
-                                        placeholder="07xx xxx xxx"
-                                        value={phoneNumber}
-                                        onChange={(e) => setPhoneNumber(e.target.value)}
-                                        type="tel"
-                                        className="pl-9"
+                                        placeholder="Numele clientului"
+                                        value={form.client}
+                                        onChange={(e) => updateField("client", e.target.value)}
+                                        required
+                                        className="h-10 text-sm"
                                     />
                                 </div>
+
+                                {/* Document Number + Phone */}
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <FieldLabel icon={<Hash className="size-3.5" />}>Numar Doc.</FieldLabel>
+                                        <Input
+                                            placeholder="123456"
+                                            value={form.orderOrInvoice}
+                                            onChange={(e) => updateField("orderOrInvoice", e.target.value.replace(/[^0-9a-zA-Z-]/g, ""))}
+                                            required
+                                            className="h-10 font-mono text-sm"
+                                        />
+                                    </div>
+                                    <div>
+                                        <FieldLabel icon={<Phone className="size-3.5" />}>Telefon</FieldLabel>
+                                        <Input
+                                            placeholder="07xx xxx xxx"
+                                            value={form.phoneNumber}
+                                            onChange={(e) => updateField("phoneNumber", e.target.value)}
+                                            type="tel"
+                                            className="h-10 font-mono text-sm"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Description */}
+                                <div>
+                                    <FieldLabel icon={<AlignLeft className="size-3.5" />}>Detalii</FieldLabel>
+                                    <Textarea
+                                        placeholder="Adauga observatii, mentiuni despre comanda, marfa..."
+                                        value={form.text}
+                                        onChange={(e) => updateField("text", e.target.value)}
+                                        className="min-h-[160px] resize-y text-sm leading-relaxed"
+                                    />
+                                </div>
+
+                                {/* Error */}
+                                {error && (
+                                    <div className="flex items-center gap-2 p-3 rounded-md bg-destructive/10 border border-destructive/20 text-destructive text-xs animate-shake">
+                                        <AlertCircle className="size-4 shrink-0" />
+                                        <p className="font-medium">{error}</p>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* ── Sidebar (Metadata) ── */}
+                            <div className="px-5 py-1 bg-muted/20 md:bg-transparent">
+                                
+                                <SidebarSection title="Tip Document" icon={<FileText className="size-3.5" />}>
+                                    <div className="grid grid-cols-2 gap-1.5">
+                                        {DOCUMENT_TYPES.map(type => (
+                                            <button
+                                                key={type}
+                                                type="button"
+                                                onClick={() => updateField("documentType", type)}
+                                                className={cn(
+                                                    "py-1.5 px-2 rounded-md border text-[10px] font-semibold uppercase tracking-wider transition-colors duration-150 outline-none",
+                                                    form.documentType === type
+                                                        ? cn(DOC_COLORS[type], "border-2")
+                                                        : "bg-background border-border text-muted-foreground hover:bg-muted hover:text-foreground"
+                                                )}
+                                            >
+                                                {type}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </SidebarSection>
+
+                                <SidebarSection
+                                    title={`Etichete${form.selectedTags.length > 0 ? ` (${form.selectedTags.length})` : ""}`}
+                                    icon={<Tag className="size-3.5" />}
+                                >
+                                    <div className="flex flex-wrap gap-1">
+                                        {AVAILABLE_TAGS.map(tag => (
+                                            <button
+                                                key={tag}
+                                                type="button"
+                                                onClick={() => toggleTag(tag)}
+                                                className={cn(
+                                                    "text-[9px] px-2 py-1 rounded border transition-colors duration-150 font-semibold uppercase tracking-wider outline-none select-none",
+                                                    form.selectedTags.includes(tag)
+                                                        ? TAG_COLORS[tag]
+                                                        : "bg-background text-muted-foreground border-border hover:bg-muted hover:text-foreground"
+                                                )}
+                                            >
+                                                {tag}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </SidebarSection>
+
+                                {editingNote && (
+                                    <SidebarSection title="Informatii" icon={<Edit3 className="size-3.5" />}>
+                                        <div className="space-y-1.5 text-[10px] font-mono text-muted-foreground">
+                                            <div className="flex justify-between">
+                                                <span>Creat:</span>
+                                                <span className="text-foreground/80">
+                                                    {new Date(editingNote.createdAt).toLocaleDateString()}
+                                                </span>
+                                            </div>
+                                            {editingNote.updatedAt && (
+                                                <div className="flex justify-between">
+                                                    <span>Editat:</span>
+                                                    <span className="text-primary/70">
+                                                        {new Date(editingNote.updatedAt).toLocaleDateString()}
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </SidebarSection>
+                                )}
                             </div>
                         </div>
+                    </div>
 
-                        <div className="space-y-2">
-                            <label className="text-[10px] uppercase tracking-wider font-mono text-muted-foreground ml-1">Tag-uri</label>
-                            <div className="flex flex-wrap gap-1.5">
-                                {AVAILABLE_TAGS.map(tag => (
-                                    <button
-                                        key={tag}
-                                        type="button"
-                                        onClick={() => toggleTag(tag)}
-                                        className={cn(
-                                            "text-[10px] px-2.5 py-1 rounded-md border transition-all font-bold uppercase tracking-tight",
-                                            selectedTags.includes(tag)
-                                                ? TAG_COLORS[tag]
-                                                : "bg-background text-muted-foreground border-border hover:border-primary/50"
-                                        )}
-                                    >
-                                        {tag}
-                                    </button>
-                                ))}
-                            </div>
+                    {/* ─── Footer ─── */}
+                    <footer className="shrink-0 px-5 py-3 border-t border-border bg-muted/30 flex items-center justify-between gap-2">
+                        <div>
+                            {editingNote && onDelete && (
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    onClick={handleDelete}
+                                    className="h-9 px-3 gap-1.5 text-xs font-semibold text-destructive hover:text-destructive hover:bg-destructive/10"
+                                >
+                                    <Trash2 className="size-3.5" />
+                                    Sterge
+                                </Button>
+                            )}
                         </div>
-
-                        <div className="space-y-2">
-                            <label className="text-[10px] uppercase tracking-wider font-mono text-muted-foreground ml-1">Text Optional (Detalii)</label>
-                            <Textarea
-                                placeholder="Adauga mai multe detalii aici..."
-                                value={text}
-                                onChange={(e) => setText(e.target.value)}
-                                className="min-h-[120px] resize-none"
-                            />
-                        </div>
-
-                        {error && (
-                            <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-xs animate-shake">
-                                <AlertCircle className="size-4 shrink-0" />
-                                <p>{error}</p>
-                            </div>
-                        )}
-
-                        <div className="flex gap-3 pt-2">
-                            <Button variant="outline" type="button" onClick={onClose} className="flex-1">
+                        <div className="flex items-center gap-2">
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                onClick={onClose}
+                                className="h-9 px-4 text-xs font-semibold"
+                            >
                                 Anuleaza
                             </Button>
-                            <Button type="submit" className="flex-[2] gap-2" disabled={!nume || !client || !orderOrInvoice}>
-                                {editingNote ? <Check className="size-4" /> : <Plus className="size-4" />}
-                                {editingNote ? "Salveaza Modificarile" : "Adauga Nota"}
+                            <Button
+                                type="submit"
+                                className="h-9 px-5 gap-2 text-xs font-semibold shadow-sm"
+                                disabled={!isFormValid || isSubmitting}
+                            >
+                                {isSubmitting ? "Se salveaza..." : editingNote ? "Salveaza" : "Adauga"}
                             </Button>
                         </div>
-                    </form>
-                </CardContent>
-            </Card>
-        </div>
+                    </footer>
+                </form>
+            </aside>
+        </div>,
+        document.body
     );
 }
