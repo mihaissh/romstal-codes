@@ -133,13 +133,10 @@ export default function Scanner({ onScanSuccess }: Props) {
                         (decodedText) => {
                             const now = Date.now();
                             const last = lastScannedRef.current;
-                            // Ignore if we just scanned the same code less than 3 seconds ago
                             if (last.code === decodedText && now - last.time < 3000) {
                                 return;
                             }
                             lastScannedRef.current = { code: decodedText, time: now };
-                            
-                            // Don't stop the scanner, just notify success
                             onScanRef.current(decodedText);
                         },
                         (errorMessage) => {
