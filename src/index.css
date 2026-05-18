@@ -71,26 +71,26 @@
     --color-highlight: var(--highlight);
 }
 
-/* ─── LIGHT THEME: Soft Warm Stone (No Flashbang) ─── */
+/* ─── LIGHT THEME: Soft & Easy on Eyes ─── */
 :root {
-    --background: oklch(0.95 0.01 70); /* Soft off-white, warm tone */
-    --foreground: oklch(0.2 0.02 55);
-    --card: oklch(0.97 0.005 70);
-    --card-foreground: oklch(0.2 0.02 55);
-    --popover: oklch(0.97 0.005 70);
-    --popover-foreground: oklch(0.2 0.02 55);
-    --primary: oklch(0.5 0.18 25); /* Vibrant Romstal Red */
-    --primary-foreground: oklch(0.98 0.005 70);
-    --secondary: oklch(0.92 0.01 70);
-    --secondary-foreground: oklch(0.25 0.02 55);
-    --muted: oklch(0.9 0.01 70);
-    --muted-foreground: oklch(0.45 0.02 55);
-    --accent: oklch(0.92 0.02 25);
-    --accent-foreground: oklch(0.35 0.15 25);
-    --destructive: oklch(0.55 0.22 25);
-    --border: oklch(0.86 0.01 70);
-    --input: oklch(0.86 0.01 70);
-    --ring: oklch(0.5 0.18 25);
+    --background: oklch(0.96 0.01 250); /* Soft cool grey background */
+    --foreground: oklch(0.25 0.02 250); /* Softer dark text */
+    --card: oklch(0.99 0.005 250); /* Very slightly off-white cards */
+    --card-foreground: oklch(0.25 0.02 250);
+    --popover: oklch(0.99 0.005 250);
+    --popover-foreground: oklch(0.25 0.02 250);
+    --primary: oklch(0.55 0.20 25); /* Slightly softer Romstal Red */
+    --primary-foreground: oklch(0.98 0 0);
+    --secondary: oklch(0.92 0.01 250);
+    --secondary-foreground: oklch(0.30 0.03 250);
+    --muted: oklch(0.93 0.01 250);
+    --muted-foreground: oklch(0.50 0.02 250);
+    --accent: oklch(0.93 0.02 25);
+    --accent-foreground: oklch(0.40 0.15 25);
+    --destructive: oklch(0.60 0.20 25);
+    --border: oklch(0.85 0.01 250);
+    --input: oklch(0.85 0.01 250);
+    --ring: oklch(0.55 0.20 25);
     --radius: 0.6rem;
 
     /* Tag semantic colors — Light (Vibrant but balanced) */
@@ -104,71 +104,72 @@
     --tag-color-text: oklch(0.35 0.15 20);
     --tag-dimension-bg: oklch(0.92 0.08 85);
     --tag-dimension-text: oklch(0.35 0.15 85);
-    --highlight: oklch(0.5 0.18 25);
+    --highlight: oklch(0.55 0.22 25);
 
     --chart-1: oklch(0.62 0.14 55);
     --chart-2: oklch(0.62 0.1 155);
     --chart-3: oklch(0.62 0.12 230);
     --chart-4: oklch(0.62 0.1 340);
     --chart-5: oklch(0.62 0.12 70);
-    --sidebar: oklch(0.93 0.008 70);
-    --sidebar-foreground: oklch(0.2 0.02 55);
-    --sidebar-primary: oklch(0.42 0.11 55);
-    --sidebar-primary-foreground: oklch(0.96 0 0);
-    --sidebar-accent: oklch(0.89 0.015 55);
-    --sidebar-accent-foreground: oklch(0.22 0.03 55);
-    --sidebar-border: oklch(0.84 0.012 70);
-    --sidebar-ring: oklch(0.55 0.1 55);
+    --sidebar: oklch(0.96 0.01 250);
+    --sidebar-foreground: oklch(0.15 0.02 250);
+    --sidebar-primary: oklch(0.55 0.22 25);
+    --sidebar-primary-foreground: oklch(0.98 0 0);
+    --sidebar-accent: oklch(0.92 0.015 250);
+    --sidebar-accent-foreground: oklch(0.15 0.02 250);
+    --sidebar-border: oklch(0.88 0.01 250);
+    --sidebar-ring: oklch(0.55 0.22 25);
 }
 
-/* ─── DARK THEME: Vibrant Workshop ─── */
+/* ─── DARK THEME: Monokai Inspired ─── */
 .dark {
-    --background: oklch(0.22 0.015 55); /* Warm workshop dark, slightly deeper */
-    --foreground: oklch(0.94 0.015 70);
-    --card: oklch(0.26 0.015 55);
-    --card-foreground: oklch(0.94 0.015 70);
-    --popover: oklch(0.26 0.015 55);
-    --popover-foreground: oklch(0.94 0.015 70);
-    --primary: oklch(0.7 0.18 65); /* More vibrant Romstal Red for Dark */
-    --primary-foreground: oklch(0.15 0.015 55);
-    --secondary: oklch(0.3 0.02 55);
-    --secondary-foreground: oklch(0.9 0.015 70);
-    --muted: oklch(0.28 0.015 55);
-    --muted-foreground: oklch(0.65 0.02 65);
-    --accent: oklch(0.32 0.03 55);
-    --accent-foreground: oklch(0.92 0.015 70);
-    --destructive: oklch(0.65 0.2 25);
-    --border: oklch(0.34 0.02 55);
-    --input: oklch(0.34 0.02 55);
-    --ring: oklch(0.7 0.18 65);
+    --background: oklch(0.24 0.01 90); /* Monokai Background: #272822 */
+    --foreground: oklch(0.96 0.01 90); /* Monokai Foreground: #F8F8F2 */
+    --card: oklch(0.28 0.01 90); /* Slightly lighter for depth */
+    --card-foreground: oklch(0.96 0.01 90);
+    --popover: oklch(0.28 0.01 90);
+    --popover-foreground: oklch(0.96 0.01 90);
+    --primary: oklch(0.62 0.22 15); /* Monokai Pink/Red: #F92672 */
+    --primary-foreground: oklch(0.98 0.01 90);
+    --secondary: oklch(0.35 0.02 90); /* Monokai Grey: #49483E */
+    --secondary-foreground: oklch(0.96 0.01 90);
+    --muted: oklch(0.32 0.01 90);
+    --muted-foreground: oklch(0.75 0.02 90);
+    --accent: oklch(0.35 0.02 90);
+    --accent-foreground: oklch(0.85 0.12 100); /* Monokai Yellow accent */
+    --destructive: oklch(0.62 0.22 15); /* Pink/Red */
+    --border: oklch(0.35 0.02 90); /* Defined borders */
+    --input: oklch(0.35 0.02 90);
+    --ring: oklch(0.62 0.22 15);
     --radius: 0.6rem;
 
-    /* Tag semantic colors — Dark (Vibrant & Punchy) */
-    --tag-code-bg: oklch(0.35 0.06 55);
-    --tag-code-text: oklch(0.85 0.12 65);
-    --tag-category-bg: oklch(0.32 0.08 155);
-    --tag-category-text: oklch(0.85 0.12 155);
-    --tag-material-bg: oklch(0.32 0.08 240);
-    --tag-material-text: oklch(0.85 0.15 240);
-    --tag-color-bg: oklch(0.32 0.08 20);
-    --tag-color-text: oklch(0.85 0.15 20);
-    --tag-dimension-bg: oklch(0.32 0.1 85);
-    --tag-dimension-text: oklch(0.85 0.15 85);
-    --highlight: oklch(0.85 0.18 65);
+    /* Tag semantic colors — Dark (Monokai Palette) */
+    --tag-code-bg: oklch(0.35 0.02 90);
+    --tag-code-text: oklch(0.85 0.10 190); /* Cyan #66D9EF */
+    --tag-category-bg: oklch(0.32 0.04 140);
+    --tag-category-text: oklch(0.85 0.15 140); /* Green #A6E22E */
+    --tag-material-bg: oklch(0.32 0.06 65);
+    --tag-material-text: oklch(0.80 0.15 65); /* Orange #FD971F */
+    --tag-color-bg: oklch(0.32 0.06 15);
+    --tag-color-text: oklch(0.85 0.15 15); /* Pink #F92672 */
+    --tag-dimension-bg: oklch(0.32 0.08 300);
+    --tag-dimension-text: oklch(0.80 0.12 300); /* Purple #AE81FF */
+    --highlight: oklch(0.90 0.12 100); /* Yellow #E6DB74 */
 
-    --chart-1: oklch(0.72 0.14 65);
-    --chart-2: oklch(0.7 0.1 155);
-    --chart-3: oklch(0.7 0.12 230);
-    --chart-4: oklch(0.7 0.1 340);
-    --chart-5: oklch(0.7 0.12 70);
-    --sidebar: oklch(0.22 0.012 55);
-    --sidebar-foreground: oklch(0.91 0.015 70);
-    --sidebar-primary: oklch(0.75 0.14 65);
-    --sidebar-primary-foreground: oklch(0.18 0.015 55);
-    --sidebar-accent: oklch(0.29 0.02 55);
-    --sidebar-accent-foreground: oklch(0.88 0.01 70);
-    --sidebar-border: oklch(0.32 0.015 55);
-    --sidebar-ring: oklch(0.65 0.12 65);
+    --chart-1: oklch(0.62 0.22 15);   /* Pink */
+    --chart-2: oklch(0.85 0.15 140);  /* Green */
+    --chart-3: oklch(0.85 0.10 190);  /* Cyan */
+    --chart-4: oklch(0.80 0.15 65);   /* Orange */
+    --chart-5: oklch(0.80 0.12 300);  /* Purple */
+    
+    --sidebar: oklch(0.24 0.01 90);
+    --sidebar-foreground: oklch(0.96 0.01 90);
+    --sidebar-primary: oklch(0.62 0.22 15);
+    --sidebar-primary-foreground: oklch(0.98 0.01 90);
+    --sidebar-accent: oklch(0.35 0.02 90);
+    --sidebar-accent-foreground: oklch(0.96 0.01 90);
+    --sidebar-border: oklch(0.35 0.02 90);
+    --sidebar-ring: oklch(0.62 0.22 15);
 }
 
 @layer base {

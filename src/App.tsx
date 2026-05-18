@@ -1,5 +1,5 @@
-import { useState, useMemo, useEffect } from "react";
-import { Info } from "lucide-react";
+import { useState, useMemo, useEffect, Suspense, lazy } from "react";
+import { Info, Loader2 } from "lucide-react";
 import SearchBar from "@/components/SearchBar";
 import Results from "@/components/Results";
 import SearchHistory from "@/components/SearchHistory";
@@ -12,14 +12,17 @@ import Profile from "@/components/Profile";
 import Stoc from "@/components/Stoc";
 import Auth from "@/components/Auth";
 import AboutModal from "@/components/AboutModal";
-import Scanner from "@/components/Scanner";
+import type { ScannedItem } from "@/components/scanner/ScannedList";
+import ScannedList from "@/components/scanner/ScannedList";
 import { useSearchHistory } from "@/hooks/useSearchHistory";
 import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/hooks/useAuth";
 import { searchSupabase } from "@/utils/search";
 import type { Product } from "@/types/Product";
+import type { FilialaCode } from "@/types/filiala";
 
-type StoreCode = "1BN1" | "1BV1";
+const Scanner = lazy(() => import("@/components/Scanner"));
+
 type View = "search" | "calculator" | "notes" | "profile" | "stoc" | "scan";
 
 export default function App() {
@@ -58,8 +61,10 @@ export default function App() {
 
     const [query, setQuery] = useState("");
     const [selected, setSelected] = useState<Product | null>(null);
-    const [currentStore, setCurrentStore] = useState<StoreCode>("1BN1");
+    const [currentStore, setCurrentStore] = useState<FilialaCode>("1BN1");
     const [currentStorage, setCurrentStorage] = useState<StorageLocation>("deposit");
+    const [scannedItems, setScannedItems] = useState<ScannedItem[]>([]);
+    const [scanMessage, setScanMessage] = useState<{ text: string; type: "success" | "error" | "info" } | null>(null);
 
     const handleViewChange = (newView: View) => setView(newView);
 
@@ -78,7 +83,7 @@ export default function App() {
         addToHistory(product);
     };
 
-    const handleStoreSelect = (storeCode: StoreCode) => {
+    const handleStoreSelect = (storeCode: FilialaCode) => {
         if (storeCode === currentStore) return;
         setCurrentStore(storeCode);
         setSelected(null);
@@ -94,21 +99,44 @@ export default function App() {
     };
 
     const handleScanSuccess = async (code: string) => {
-        const results = await searchSupabase(code, { maxCodeResults: 1 });
+        setScanMessage({ text: `Cautare cod ${code}...`, type: "info" });
+        const results = await searchSupabase(code, { maxCodeResults: 1, exactCodeOnly: true });
         if (results.codeResults.length > 0) {
-            handleSelectProduct(results.codeResults[0].product);
-            setView("search");
+            const product = results.codeResults[0].product;
+            setScannedItems((prev) => {
+                const existing = prev.find((item) => item.product.code === product.code);
+                if (existing) {
+                    return prev.map((item) =>
+                        item.product.code === product.code
+                            ? { ...item, count: item.count + 1 }
+                            : item
+                    );
+                }
+                return [{ product, count: 1 }, ...prev];
+            });
+            setScanMessage({ text: `Adaugat: ${product.name}`, type: "success" });
         } else {
-            setQuery(code);
-            setView("search");
+            setScanMessage({ text: `Produsul cu codul ${code} nu a fost gasit.`, type: "error" });
         }
+        
+        setTimeout(() => setScanMessage(null), 3000);
+    };
+
+    const updateScannedCount = (code: string, count: number) => {
+        setScannedItems((prev) =>
+            prev.map((item) => (item.product.code === code ? { ...item, count } : item))
+        );
+    };
+
+    const removeScannedItem = (code: string) => {
+        setScannedItems((prev) => prev.filter((item) => item.product.code !== code));
     };
 
     if (!isAppReady) return null;
 
     return (
         <div className="min-h-screen px-5 sm:px-6 flex flex-col">
-            <div className="max-w-2xl mx-auto flex-1 w-full pb-10">
+            <div className={`mx-auto flex-1 w-full pb-10 transition-all duration-300 ${view === 'notes' || view === 'stoc' ? 'max-w-[1400px]' : 'max-w-2xl'}`}>
                 <Header 
                     theme={theme} 
                     onToggleTheme={toggleTheme} 
@@ -166,13 +194,34 @@ export default function App() {
 
                 {view === "stoc" && (
                     <div key="stoc-view" className="pt-2">
-                        <Stoc />
+                        <Stoc store={currentStore} onStoreSelect={handleStoreSelect} />
                     </div>
                 )}
 
                 {view === "scan" && (
                     <div key="scan-view" className="pt-2">
-                        <Scanner onScanSuccess={handleScanSuccess} />
+                        <Suspense fallback={
+                            <div className="flex flex-col items-center justify-center p-10 bg-card rounded-xl border-2">
+                                <Loader2 className="size-8 text-primary animate-spin mb-4" />
+                                <p className="text-sm text-muted-foreground font-mono">Incarcare modul scanner...</p>
+                            </div>
+                        }>
+                            <Scanner onScanSuccess={handleScanSuccess} />
+                        </Suspense>
+                        {scanMessage && (
+                            <div className={`mt-4 p-3 rounded-xl border text-sm animate-fade-up ${
+                                scanMessage.type === "error" ? "bg-destructive/10 border-destructive/20 text-destructive" :
+                                scanMessage.type === "success" ? "bg-green-500/10 border-green-500/20 text-green-600 dark:text-green-400" :
+                                "bg-blue-500/10 border-blue-500/20 text-blue-600 dark:text-blue-400"
+                            }`}>
+                                {scanMessage.text}
+                            </div>
+                        )}
+                        <ScannedList 
+                            items={scannedItems} 
+                            onUpdateCount={updateScannedCount} 
+                            onRemove={removeScannedItem} 
+                        />
                     </div>
                 )}
             </div>

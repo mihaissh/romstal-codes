@@ -8,12 +8,10 @@ import {
     DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 
-type StoreCode = "1BN1" | "1BV1";
-const STORES: StoreCode[] = ["1BN1", "1BV1"];
-
+import { FILIALAS, type FilialaCode } from "@/types/filiala";
 interface StoreSelectorProps {
-    currentStore: StoreCode;
-    onStoreSelect: (storeCode: StoreCode) => void;
+    currentStore: FilialaCode;
+    onStoreSelect: (storeCode: FilialaCode) => void;
 }
 
 const StoreSelector = memo(function StoreSelector({ currentStore, onStoreSelect }: StoreSelectorProps) {
@@ -27,7 +25,7 @@ const StoreSelector = memo(function StoreSelector({ currentStore, onStoreSelect 
                 <ChevronDown className="size-3 text-muted-foreground" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start">
-                {STORES.map(code => (
+                {FILIALAS.map((code) => (
                     <DropdownMenuItem
                         key={code}
                         onClick={() => onStoreSelect(code)}

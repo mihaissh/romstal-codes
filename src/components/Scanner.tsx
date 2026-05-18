@@ -80,6 +80,8 @@ export default function Scanner({ onScanSuccess }: Props) {
         });
     }, [enqueue]);
 
+    const lastScannedRef = useRef<{ code: string; time: number }>({ code: "", time: 0 });
+
     const start = useCallback(
         (cameraId?: string): Promise<void> => {
             const myGen = ++generationRef.current;
@@ -129,7 +131,13 @@ export default function Scanner({ onScanSuccess }: Props) {
                         chosen,
                         SCAN_CONFIG,
                         (decodedText) => {
-                            stop().finally(() => onScanRef.current(decodedText));
+                            const now = Date.now();
+                            const last = lastScannedRef.current;
+                            if (last.code === decodedText && now - last.time < 3000) {
+                                return;
+                            }
+                            lastScannedRef.current = { code: decodedText, time: now };
+                            onScanRef.current(decodedText);
                         },
                         (errorMessage) => {
                             if (errorMessage.includes(NO_CODE_DETECTED)) return;

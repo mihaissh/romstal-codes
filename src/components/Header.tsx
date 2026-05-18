@@ -44,6 +44,7 @@ type TabConfig = {
     icon: React.ReactNode;
     requiresAuth?: boolean;
     lockedReason?: string;
+    className?: string;
 };
 
 const TABS: TabConfig[] = [
@@ -53,15 +54,12 @@ const TABS: TabConfig[] = [
         view: "scan",
         label: "Scan",
         icon: <Scan className="size-3.5" />,
-        requiresAuth: true,
-        lockedReason: "Login necesar",
+        className: "sm:hidden",
     },
     {
         view: "notes",
         label: "Note",
         icon: <StickyNote className="size-3.5" />,
-        requiresAuth: true,
-        lockedReason: "In lucru / Login necesar",
     },
 ];
 
@@ -78,7 +76,7 @@ function NavTab({ tab, activeView, locked, onClick }: NavTabProps) {
 
     if (locked) {
         return (
-            <div className="flex-1 relative group">
+            <div className={cn("flex-1 relative group", tab.className)}>
                 <button
                     type="button"
                     disabled
@@ -104,6 +102,7 @@ function NavTab({ tab, activeView, locked, onClick }: NavTabProps) {
             onClick={onClick}
             className={cn(
                 baseTab,
+                tab.className,
                 activeView === tab.view
                     ? "bg-background text-primary shadow-sm font-bold border-border"
                     : "text-muted-foreground hover:text-foreground hover:bg-background/50 hover:border-border/50",

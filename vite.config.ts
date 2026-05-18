@@ -11,6 +11,17 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          scanner: ['html5-qrcode'],
+          supabase: ['@supabase/supabase-js'],
+        }
+      }
+    }
+  },
   test: {
     globals: true,
     environment: "jsdom",

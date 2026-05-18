@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useNotes, type Note } from "@/hooks/useNotes";
-import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Plus, StickyNote } from "lucide-react";
 import NoteModal from "./notes/NoteModal";
@@ -8,7 +7,6 @@ import NoteList from "./notes/NoteList";
 
 export default function Notes() {
     const { notes, loading, addNote, updateNote, deleteNote, clearNotes } = useNotes();
-    const { user } = useAuth();
     const [showModal, setShowModal] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [editingNote, setEditingNote] = useState<Note | null>(null);
@@ -30,11 +28,6 @@ export default function Notes() {
     };
 
     const handleSubmit = async (noteData: any) => {
-        if (!user) {
-            setError("Trebuie sa fii autentificat pentru a adauga note.");
-            return;
-        }
-
         try {
             if (editingNote) {
                 await updateNote(editingNote.id, noteData);
@@ -82,6 +75,7 @@ export default function Notes() {
                 isOpen={showModal} 
                 onClose={handleCloseModal} 
                 onSubmit={handleSubmit} 
+                onDelete={deleteNote}
                 editingNote={editingNote} 
                 error={error} 
             />

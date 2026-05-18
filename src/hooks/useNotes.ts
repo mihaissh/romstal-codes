@@ -1,148 +1,85 @@
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/lib/supabase";
 
-export type NoteTag = "platit" | "neplatit" | "livrare curier" | "livrare marfa" | "ridica client" | "SPEDEX";
+export type NoteTag = "platit" | "neplatit" | "livrare curier" | "livrare marfa" | "ridica client" | "SPEDEX" | "emisa" | "ne emisa";
+
+export type DocumentType = "Factura" | "Nota Livrare" | "Proforma" | "Oferta" | "Altele";
 
 export interface Note {
     id: string;
     nume: string;
     client: string;
     orderOrInvoice: string;
+    documentType?: DocumentType;
     phone_number?: string;
     text?: string;
     tags: NoteTag[];
     createdAt: number;
     updatedAt?: number;
-    user_id?: string;
 }
+
+const LOCAL_STORAGE_KEY = "romstal_notes_v1";
 
 export function useNotes() {
     const [notes, setNotes] = useState<Note[]>([]);
     const [loading, setLoading] = useState(true);
-    const [userId, setUserId] = useState<string | null>(null);
 
-    // Get current user on mount and when auth state changes
-    useEffect(() => {
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            setUserId(session?.user?.id ?? null);
-        });
-
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-            setUserId(session?.user?.id ?? null);
-        });
-
-        return () => subscription.unsubscribe();
-    }, []);
-
-    const fetchNotes = useCallback(async () => {
+    const fetchNotes = useCallback(() => {
         setLoading(true);
         try {
-            let query = supabase
-                .from('notes')
-                .select('*')
-                .order('createdAt', { ascending: false });
-
-            // If user is logged in, only show their notes
-            // Note: This assumes you added the user_id column
-            if (userId) {
-                query = query.eq('user_id', userId);
-            }
-
-            const { data, error } = await query;
-
-            if (error) {
-                console.error("Error fetching notes:", error);
-            } else if (data) {
-                setNotes(data as Note[]);
+            const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                setNotes(parsed.sort((a: Note, b: Note) => b.createdAt - a.createdAt));
+            } else {
+                setNotes([]);
             }
         } catch (e) {
-            console.error("Failed to fetch notes:", e);
+            console.error("Failed to parse notes from local storage:", e);
+            setNotes([]);
         } finally {
             setLoading(false);
         }
-    }, [userId]);
+    }, []);
 
     useEffect(() => {
         fetchNotes();
     }, [fetchNotes]);
 
-    const addNote = async (note: Omit<Note, "id" | "createdAt" | "updatedAt" | "user_id">) => {
-        const newNote = {
+    const saveToStorage = (newNotes: Note[]) => {
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newNotes));
+    };
+
+    const addNote = async (note: Omit<Note, "id" | "createdAt" | "updatedAt">) => {
+        const newNote: Note = {
             ...note,
             id: crypto.randomUUID(),
             createdAt: Date.now(),
-            user_id: userId, // Associate with current user if logged in
         };
 
-        try {
-            const { error } = await supabase.from('notes').insert([newNote]);
-            if (error) {
-                console.error("Error adding note:", error);
-            } else {
-                setNotes([newNote as Note, ...notes]);
-            }
-        } catch (e) {
-            console.error("Failed to add note:", e);
-        }
+        const newNotes = [newNote, ...notes];
+        setNotes(newNotes);
+        saveToStorage(newNotes);
     };
 
-    const updateNote = async (id: string, updates: Partial<Omit<Note, "id" | "createdAt" | "user_id">>) => {
+    const updateNote = async (id: string, updates: Partial<Omit<Note, "id" | "createdAt">>) => {
         const updatedAt = Date.now();
-        try {
-            const { error } = await supabase
-                .from('notes')
-                .update({ ...updates, updatedAt })
-                .eq('id', id);
-
-            if (error) {
-                console.error("Error updating note:", error);
-            } else {
-                setNotes(notes.map((n) => 
-                    n.id === id ? { ...n, ...updates, updatedAt } : n
-                ));
-            }
-        } catch (e) {
-            console.error("Failed to update note:", e);
-        }
+        const newNotes = notes.map((n) => 
+            n.id === id ? { ...n, ...updates, updatedAt } : n
+        );
+        
+        setNotes(newNotes);
+        saveToStorage(newNotes);
     };
 
     const deleteNote = async (id: string) => {
-        try {
-            const { error } = await supabase
-                .from('notes')
-                .delete()
-                .eq('id', id);
-
-            if (error) {
-                console.error("Error deleting note:", error);
-            } else {
-                setNotes(notes.filter((n) => n.id !== id));
-            }
-        } catch (e) {
-            console.error("Failed to delete note:", e);
-        }
+        const newNotes = notes.filter((n) => n.id !== id);
+        setNotes(newNotes);
+        saveToStorage(newNotes);
     };
 
     const clearNotes = async () => {
-        try {
-            let query = supabase.from('notes').delete();
-            
-            if (userId) {
-                query = query.eq('user_id', userId);
-            } else {
-                query = query.neq('id', '');
-            }
-
-            const { error } = await query;
-
-            if (error) {
-                console.error("Error clearing notes:", error);
-            } else {
-                setNotes([]);
-            }
-        } catch (e) {
-            console.error("Failed to clear notes:", e);
-        }
+        setNotes([]);
+        localStorage.removeItem(LOCAL_STORAGE_KEY);
     };
 
     return {
