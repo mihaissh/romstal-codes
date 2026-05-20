@@ -1,4 +1,4 @@
-import { Loader2, CameraOff, RefreshCw } from "lucide-react";
+import { Loader2, CameraOff, RefreshCw, Scan } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { ScannerStatus } from "./StatusBadge";
 
@@ -6,16 +6,35 @@ interface ScannerViewProps {
     containerId: string;
     status: ScannerStatus;
     error: string | null;
+    onStart: () => void;
     onRetry: () => void;
 }
 
-export default function ScannerView({ containerId, status, error, onRetry }: ScannerViewProps) {
+export default function ScannerView({ containerId, status, error, onStart, onRetry }: ScannerViewProps) {
     return (
         <div className="relative w-full overflow-hidden bg-black">
             <div
                 id={containerId}
                 className="min-h-[280px] w-full [&_video]:block [&_video]:w-full"
             />
+
+            {status === "idle" && !error && (
+                <Overlay>
+                    <Scan className="size-10 text-primary" />
+                    <p className="text-[11px] font-mono uppercase tracking-widest text-white/80">
+                        Camera oprită
+                    </p>
+                    <Button
+                        variant="default"
+                        size="lg"
+                        onClick={onStart}
+                        className="mt-1 gap-2 font-mono"
+                    >
+                        <Scan className="size-4" />
+                        Începe scanarea
+                    </Button>
+                </Overlay>
+            )}
 
             {status === "starting" && <Overlay>
                 <Loader2 className="size-8 text-primary animate-spin" />

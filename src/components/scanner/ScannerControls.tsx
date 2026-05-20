@@ -6,14 +6,18 @@ interface ScannerControlsProps {
     hasMultipleCameras: boolean;
     onCycleCamera: () => void;
     isScanning: boolean;
+    onStop: () => void;
 }
 
-export default function ScannerControls({ 
-    activeCameraLabel, 
-    hasMultipleCameras, 
-    onCycleCamera, 
-    isScanning 
+export default function ScannerControls({
+    activeCameraLabel,
+    hasMultipleCameras,
+    onCycleCamera,
+    isScanning,
+    onStop,
 }: ScannerControlsProps) {
+    if (!isScanning) return null;
+
     return (
         <div className="flex items-center justify-between gap-3 border-t border-border/50 bg-muted/30 p-3">
             <div className="flex min-w-0 items-center gap-2">
@@ -27,20 +31,29 @@ export default function ScannerControls({
                     <p className="truncate text-xs font-medium">{activeCameraLabel}</p>
                 </div>
             </div>
-            {hasMultipleCameras && (
+            <div className="flex shrink-0 items-center gap-2">
+                {hasMultipleCameras && (
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={onCycleCamera}
+                        className="gap-1.5"
+                    >
+                        <SwitchCamera className="size-3.5" />
+                        <span className="text-[11px] font-mono uppercase tracking-wider">
+                            Schimbă
+                        </span>
+                    </Button>
+                )}
                 <Button
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
-                    onClick={onCycleCamera}
-                    disabled={!isScanning}
-                    className="shrink-0 gap-1.5"
+                    onClick={onStop}
+                    className="gap-1.5 font-mono text-[11px] uppercase tracking-wider"
                 >
-                    <SwitchCamera className="size-3.5" />
-                    <span className="text-[11px] font-mono uppercase tracking-wider">
-                        Schimba
-                    </span>
+                    Oprește
                 </Button>
-            )}
+            </div>
         </div>
     );
 }

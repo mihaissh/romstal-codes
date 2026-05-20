@@ -13,6 +13,8 @@ import ScannerControls from "./scanner/ScannerControls";
 
 interface Props {
     onScanSuccess: (decodedText: string) => void;
+    /** When true, camera is stopped (e.g. while scan result modal is open). */
+    paused?: boolean;
 }
 
 const SUPPORTED_FORMATS = [
@@ -34,7 +36,7 @@ const SCAN_CONFIG = {
     },
 };
 
-export default function Scanner({ onScanSuccess }: Props) {
+export default function Scanner({ onScanSuccess, paused = false }: Props) {
     const rawId = useId();
     const containerId = `scanner-${rawId.replace(/:/g, "-")}`;
 
@@ -183,11 +185,14 @@ export default function Scanner({ onScanSuccess }: Props) {
     );
 
     useEffect(() => {
-        start();
         return () => {
             stop();
         };
-    }, []);
+    }, [stop]);
+
+    useEffect(() => {
+        if (paused) stop();
+    }, [paused, stop]);
 
     const cycleCamera = async () => {
         if (cameras.length < 2 || !activeCameraId) return;
@@ -211,18 +216,20 @@ export default function Scanner({ onScanSuccess }: Props) {
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">
-                    <ScannerView 
-                        containerId={containerId} 
-                        status={status} 
-                        error={error} 
-                        onRetry={() => start()} 
+                    <ScannerView
+                        containerId={containerId}
+                        status={status}
+                        error={error}
+                        onStart={() => start()}
+                        onRetry={() => start()}
                     />
 
-                    <ScannerControls 
-                        activeCameraLabel={activeCameraLabel} 
-                        hasMultipleCameras={cameras.length > 1} 
-                        onCycleCamera={cycleCamera} 
-                        isScanning={status === "scanning"} 
+                    <ScannerControls
+                        activeCameraLabel={activeCameraLabel}
+                        hasMultipleCameras={cameras.length > 1}
+                        onCycleCamera={cycleCamera}
+                        isScanning={status === "scanning"}
+                        onStop={stop}
                     />
                 </CardContent>
             </Card>

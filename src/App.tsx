@@ -235,7 +235,10 @@ export default function App() {
                             <StoreSelector currentStore={currentStore} onStoreSelect={handleStoreSelect} />
                         </div>
 
-                        <Scanner onScanSuccess={handleScanSuccess} />
+                        <Scanner
+                            onScanSuccess={handleScanSuccess}
+                            paused={scanModal !== null}
+                        />
 
                         {scanModal?.status === "loading" && (
                             <ScanResultModal status="loading" onClose={closeScanModal} />
@@ -253,7 +256,11 @@ export default function App() {
                             />
                         )}
 
-                        <ScannedList items={scannedItems} onRemove={removeScannedItem} />
+                        <ScannedList
+                            items={scannedItems}
+                            store={currentStore}
+                            onRemove={removeScannedItem}
+                        />
                         {scanModal?.status === "error" && (
                             <ScanResultModal
                                 status="error"
