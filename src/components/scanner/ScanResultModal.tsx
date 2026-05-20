@@ -21,7 +21,9 @@ type ScanResultModalProps =
           storageNote?: string;
           quantity: number;
           onQuantityChange: (value: number) => void;
-          onClose: () => void;
+          onAdd: () => void;
+          onCancel: () => void;
+          addDisabled?: boolean;
       }
     | {
           status: "error";
@@ -31,7 +33,10 @@ type ScanResultModalProps =
       };
 
 export default function ScanResultModal(props: ScanResultModalProps) {
-    const handleBackdropClick = () => props.onClose();
+    const handleBackdropClick = () => {
+        if (props.status === "found") props.onCancel();
+        else props.onClose();
+    };
 
     return (
         <div
@@ -81,21 +86,10 @@ export default function ScanResultModal(props: ScanResultModalProps) {
                         <CardHeader>
                             <CardTitle
                                 id="scan-result-title"
-                                className="text-base sm:text-lg font-bold leading-snug pr-8"
+                                className="text-base sm:text-lg font-bold leading-snug"
                             >
                                 {props.product.name}
                             </CardTitle>
-                            <CardAction>
-                                <Button
-                                    variant="ghost"
-                                    size="icon-sm"
-                                    onClick={props.onClose}
-                                    className="rounded-full"
-                                    aria-label="Închide și scanează din nou"
-                                >
-                                    <X className="size-4" />
-                                </Button>
-                            </CardAction>
                         </CardHeader>
                         <CardContent className="space-y-5 pt-2 pb-6">
                             <div className="rounded-lg border border-border/60 bg-muted/30 px-3 py-2.5">
@@ -142,10 +136,25 @@ export default function ScanResultModal(props: ScanResultModalProps) {
                                 />
                             </div>
 
-                            <p className="text-[11px] text-muted-foreground italic">
-                                Introdu cantitatea dorită de client, apoi închide cu X pentru următoarea
-                                scanare.
-                            </p>
+                            <div className="flex gap-2 pt-1">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    className="flex-1 font-mono"
+                                    onClick={props.onCancel}
+                                >
+                                    Anulează
+                                </Button>
+                                <Button
+                                    type="button"
+                                    variant="default"
+                                    className="flex-1 font-mono"
+                                    onClick={props.onAdd}
+                                    disabled={props.addDisabled}
+                                >
+                                    Adaugă
+                                </Button>
+                            </div>
                         </CardContent>
                     </>
                 )}
@@ -177,6 +186,14 @@ export default function ScanResultModal(props: ScanResultModalProps) {
                                 Cod: <span className="font-semibold text-foreground">{props.code}</span>
                             </p>
                             <p className="text-sm leading-relaxed">{props.message}</p>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                className="w-full font-mono"
+                                onClick={props.onClose}
+                            >
+                                Închide
+                            </Button>
                         </CardContent>
                     </>
                 )}
