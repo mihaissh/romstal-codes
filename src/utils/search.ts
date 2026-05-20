@@ -1,15 +1,7 @@
 import type { Product } from "../types/Product";
 import type { FilialaCode } from "../types/filiala";
 import { supabase } from "../lib/supabase";
-
-function productFromDbRow(p: Record<string, unknown>): Product {
-    return {
-        ...(p as unknown as Product),
-        productMaterial: p.productmaterial as string | null,
-        storeName: p.storename as string,
-        storageDesc: (p.storagedesc ?? "") as string,
-    };
-}
+import { productFromDbRow } from "./productFromDb";
 
 export interface SearchResult {
     product: Product;

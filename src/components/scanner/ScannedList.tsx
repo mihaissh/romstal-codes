@@ -1,14 +1,9 @@
 import { useState } from "react";
 import { Download, Loader2, Trash2 } from "lucide-react";
-import type { Product } from "@/types/Product";
 import type { FilialaCode } from "@/types/filiala";
+import type { ScannedItem } from "@/types/scanned";
 import { Button } from "@/components/ui/button";
 import { exportScannedListXlsx } from "@/utils/exportScannedListXlsx";
-
-export interface ScannedItem {
-    product: Product;
-    count: number;
-}
 
 interface ScannedListProps {
     items: ScannedItem[];

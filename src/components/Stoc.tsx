@@ -7,6 +7,7 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { useStockUndo } from "@/hooks/useStockUndo";
 import { parseStockSpreadsheetRows } from "@/utils/parseStockXlsx";
 import { replaceStoreStockFromFile, restoreStockSnapshot } from "@/utils/stockSupabase";
+import { productFromDbRow } from "@/utils/productFromDb";
 import StoreSelector from "@/components/StoreSelector";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,15 +30,6 @@ import {
 } from "lucide-react";
 
 const PAGE_SIZE = 50;
-
-function rowFromDb(p: Record<string, unknown>): Product {
-    return {
-        ...(p as unknown as Product),
-        productMaterial: p.productmaterial as string | null,
-        storeName: p.storename as string,
-        storageDesc: (p.storagedesc ?? "") as string,
-    };
-}
 
 function formatStock(n: number): string {
     return Number.isInteger(n) ? String(n) : n.toFixed(3).replace(/\.?0+$/, "");
@@ -124,7 +116,7 @@ export default function Stoc({ store, onStoreSelect }: StocProps) {
                     setRows([]);
                     return;
                 }
-                setRows((data ?? []).map((r) => rowFromDb(r as unknown as Record<string, unknown>)));
+                setRows((data ?? []).map((r) => productFromDbRow(r as unknown as Record<string, unknown>)));
                 if (typeof count === "number") setTotalCount(count);
             }
         }

@@ -31,7 +31,7 @@ const lanIp = process.env.DEV_HMR_HOST ?? getLanIp();
 const DEV_PORT = 5173;
 const npmScript = process.env.npm_lifecycle_event ?? "";
 /** Phone/LAN scripts disable HMR by default (avoids ws:// LAN WebSocket errors). */
-const isPhoneDev = npmScript === "dev:phone" || npmScript === "dev:phone:quiet";
+const isPhoneDev = npmScript === "dev:phone";
 const phoneHmrEnabled = npmScript === "dev:phone:hmr" || process.env.PHONE_HMR === "1";
 const disableHmr = isPhoneDev && !phoneHmrEnabled;
 
