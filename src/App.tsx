@@ -13,6 +13,7 @@ import Stoc from "@/components/Stoc";
 import Auth from "@/components/Auth";
 import AboutModal from "@/components/AboutModal";
 import ScanResultModal from "@/components/scanner/ScanResultModal";
+import ScannedList, { type ScannedItem } from "@/components/scanner/ScannedList";
 import { useSearchHistory } from "@/hooks/useSearchHistory";
 import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/hooks/useAuth";
@@ -68,6 +69,7 @@ export default function App() {
     const [currentStorage, setCurrentStorage] = useState<StorageLocation>("deposit");
     const [scanModal, setScanModal] = useState<ScanModalState | null>(null);
     const [scanQuantity, setScanQuantity] = useState(1);
+    const [scannedItems, setScannedItems] = useState<ScannedItem[]>([]);
 
     const handleViewChange = (newView: View) => setView(newView);
 
@@ -94,6 +96,7 @@ export default function App() {
         setCurrentStorage("deposit");
         setScanModal(null);
         setScanQuantity(1);
+        setScannedItems([]);
     };
 
     useEffect(() => {
@@ -113,6 +116,28 @@ export default function App() {
     const closeScanModal = () => {
         setScanModal(null);
         setScanQuantity(1);
+    };
+
+    const handleScanAdd = () => {
+        if (scanModal?.status !== "found" || scanQuantity < 1) return;
+
+        const { product } = scanModal;
+        setScannedItems((prev) => {
+            const existing = prev.find((item) => item.product.code === product.code);
+            if (existing) {
+                return prev.map((item) =>
+                    item.product.code === product.code
+                        ? { ...item, count: item.count + scanQuantity }
+                        : item,
+                );
+            }
+            return [{ product, count: scanQuantity }, ...prev];
+        });
+        closeScanModal();
+    };
+
+    const removeScannedItem = (code: string) => {
+        setScannedItems((prev) => prev.filter((item) => item.product.code !== code));
     };
 
     const handleScanSuccess = async (code: string) => {
@@ -222,9 +247,13 @@ export default function App() {
                                 storageNote={scanModal.storageNote}
                                 quantity={scanQuantity}
                                 onQuantityChange={setScanQuantity}
-                                onClose={closeScanModal}
+                                onAdd={handleScanAdd}
+                                onCancel={closeScanModal}
+                                addDisabled={scanQuantity < 1}
                             />
                         )}
+
+                        <ScannedList items={scannedItems} onRemove={removeScannedItem} />
                         {scanModal?.status === "error" && (
                             <ScanResultModal
                                 status="error"

@@ -29,7 +29,11 @@ function getLanIp(): string | undefined {
 
 const lanIp = process.env.DEV_HMR_HOST ?? getLanIp();
 const DEV_PORT = 5173;
-const quietPhoneDev = process.env.npm_lifecycle_event === "dev:phone:quiet";
+const npmScript = process.env.npm_lifecycle_event ?? "";
+/** Phone/LAN scripts disable HMR by default (avoids ws:// LAN WebSocket errors). */
+const isPhoneDev = npmScript === "dev:phone" || npmScript === "dev:phone:quiet";
+const phoneHmrEnabled = npmScript === "dev:phone:hmr" || process.env.PHONE_HMR === "1";
+const disableHmr = isPhoneDev && !phoneHmrEnabled;
 
 export default defineConfig({
   plugins: [
@@ -48,11 +52,13 @@ export default defineConfig({
           if (!lanIp) {
             console.log("     (Run ipconfig and use your Wi‑Fi IPv4 address.)\n");
           }
-          if (!quietPhoneDev) {
+          if (disableHmr) {
+            console.log("  HMR off for phone dev (no WebSocket errors). Refresh manually after edits.\n");
+          } else if (isPhoneDev) {
             console.log(
-              "  If the page loads but you see WebSocket/HMR errors on the phone,\n" +
-                "  run as Administrator: npm run firewall:allow-dev\n" +
-                "  or use npm run dev:phone:quiet (no hot reload, no WS errors).\n",
+              "  HMR on. If WebSocket fails on the phone, run as Administrator:\n" +
+                "  npm run firewall:allow-dev\n" +
+                "  or use npm run dev:phone (HMR off by default).\n",
             );
           }
         });
@@ -65,9 +71,9 @@ export default defineConfig({
     strictPort: false,
     // Allow opening dev server by LAN IP (e.g. http://192.168.1.138:5173)
     allowedHosts: true,
-    hmr: quietPhoneDev
+    hmr: disableHmr
       ? false
-      : lanIp
+      : phoneHmrEnabled && lanIp
         ? {
             protocol: "ws",
             host: lanIp,
