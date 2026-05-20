@@ -1,5 +1,5 @@
-import { useState, useMemo, useEffect, Suspense, lazy } from "react";
-import { Info, Loader2 } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+import { Info } from "lucide-react";
 import SearchBar from "@/components/SearchBar";
 import Results from "@/components/Results";
 import SearchHistory from "@/components/SearchHistory";
@@ -12,18 +12,21 @@ import Profile from "@/components/Profile";
 import Stoc from "@/components/Stoc";
 import Auth from "@/components/Auth";
 import AboutModal from "@/components/AboutModal";
-import type { ScannedItem } from "@/components/scanner/ScannedList";
-import ScannedList from "@/components/scanner/ScannedList";
+import ScanResultModal from "@/components/scanner/ScanResultModal";
 import { useSearchHistory } from "@/hooks/useSearchHistory";
 import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/hooks/useAuth";
-import { searchSupabase } from "@/utils/search";
+import { lookupProductByCodeForStore } from "@/utils/search";
 import type { Product } from "@/types/Product";
 import type { FilialaCode } from "@/types/filiala";
-
-const Scanner = lazy(() => import("@/components/Scanner"));
+import Scanner from "@/components/Scanner";
 
 type View = "search" | "calculator" | "notes" | "profile" | "stoc" | "scan";
+
+type ScanModalState =
+    | { status: "loading" }
+    | { status: "found"; product: Product; storageNote?: string }
+    | { status: "error"; code: string; message: string };
 
 export default function App() {
     const { theme, toggle: toggleTheme } = useTheme();
@@ -63,8 +66,8 @@ export default function App() {
     const [selected, setSelected] = useState<Product | null>(null);
     const [currentStore, setCurrentStore] = useState<FilialaCode>("1BN1");
     const [currentStorage, setCurrentStorage] = useState<StorageLocation>("deposit");
-    const [scannedItems, setScannedItems] = useState<ScannedItem[]>([]);
-    const [scanMessage, setScanMessage] = useState<{ text: string; type: "success" | "error" | "info" } | null>(null);
+    const [scanModal, setScanModal] = useState<ScanModalState | null>(null);
+    const [scanQuantity, setScanQuantity] = useState(1);
 
     const handleViewChange = (newView: View) => setView(newView);
 
@@ -89,7 +92,16 @@ export default function App() {
         setSelected(null);
         setQuery("");
         setCurrentStorage("deposit");
+        setScanModal(null);
+        setScanQuantity(1);
     };
+
+    useEffect(() => {
+        if (view !== "scan") {
+            setScanModal(null);
+            setScanQuantity(1);
+        }
+    }, [view]);
 
     const handleStorageSelect = (storage: StorageLocation) => {
         if (storage === currentStorage) return;
@@ -98,38 +110,32 @@ export default function App() {
         setQuery("");
     };
 
+    const closeScanModal = () => {
+        setScanModal(null);
+        setScanQuantity(1);
+    };
+
     const handleScanSuccess = async (code: string) => {
-        setScanMessage({ text: `Cautare cod ${code}...`, type: "info" });
-        const results = await searchSupabase(code, { maxCodeResults: 1, exactCodeOnly: true });
-        if (results.codeResults.length > 0) {
-            const product = results.codeResults[0].product;
-            setScannedItems((prev) => {
-                const existing = prev.find((item) => item.product.code === product.code);
-                if (existing) {
-                    return prev.map((item) =>
-                        item.product.code === product.code
-                            ? { ...item, count: item.count + 1 }
-                            : item
-                    );
-                }
-                return [{ product, count: 1 }, ...prev];
+        if (scanModal !== null) return;
+
+        setScanQuantity(1);
+        setScanModal({ status: "loading" });
+
+        const result = await lookupProductByCodeForStore(code, currentStore);
+
+        if (result) {
+            setScanModal({
+                status: "found",
+                product: result.product,
+                storageNote: result.storageNote,
             });
-            setScanMessage({ text: `Adaugat: ${product.name}`, type: "success" });
         } else {
-            setScanMessage({ text: `Produsul cu codul ${code} nu a fost gasit.`, type: "error" });
+            setScanModal({
+                status: "error",
+                code,
+                message: `Produsul cu codul ${code} nu a fost găsit la filiala ${currentStore}.`,
+            });
         }
-        
-        setTimeout(() => setScanMessage(null), 3000);
-    };
-
-    const updateScannedCount = (code: string, count: number) => {
-        setScannedItems((prev) =>
-            prev.map((item) => (item.product.code === code ? { ...item, count } : item))
-        );
-    };
-
-    const removeScannedItem = (code: string) => {
-        setScannedItems((prev) => prev.filter((item) => item.product.code !== code));
     };
 
     if (!isAppReady) return null;
@@ -200,28 +206,33 @@ export default function App() {
 
                 {view === "scan" && (
                     <div key="scan-view" className="pt-2">
-                        <Suspense fallback={
-                            <div className="flex flex-col items-center justify-center p-10 bg-card rounded-xl border-2">
-                                <Loader2 className="size-8 text-primary animate-spin mb-4" />
-                                <p className="text-sm text-muted-foreground font-mono">Incarcare modul scanner...</p>
-                            </div>
-                        }>
-                            <Scanner onScanSuccess={handleScanSuccess} />
-                        </Suspense>
-                        {scanMessage && (
-                            <div className={`mt-4 p-3 rounded-xl border text-sm animate-fade-up ${
-                                scanMessage.type === "error" ? "bg-destructive/10 border-destructive/20 text-destructive" :
-                                scanMessage.type === "success" ? "bg-green-500/10 border-green-500/20 text-green-600 dark:text-green-400" :
-                                "bg-blue-500/10 border-blue-500/20 text-blue-600 dark:text-blue-400"
-                            }`}>
-                                {scanMessage.text}
-                            </div>
+                        <div className="flex items-center gap-2 mb-4 animate-fade-up">
+                            <StoreSelector currentStore={currentStore} onStoreSelect={handleStoreSelect} />
+                        </div>
+
+                        <Scanner onScanSuccess={handleScanSuccess} />
+
+                        {scanModal?.status === "loading" && (
+                            <ScanResultModal status="loading" onClose={closeScanModal} />
                         )}
-                        <ScannedList 
-                            items={scannedItems} 
-                            onUpdateCount={updateScannedCount} 
-                            onRemove={removeScannedItem} 
-                        />
+                        {scanModal?.status === "found" && (
+                            <ScanResultModal
+                                status="found"
+                                product={scanModal.product}
+                                storageNote={scanModal.storageNote}
+                                quantity={scanQuantity}
+                                onQuantityChange={setScanQuantity}
+                                onClose={closeScanModal}
+                            />
+                        )}
+                        {scanModal?.status === "error" && (
+                            <ScanResultModal
+                                status="error"
+                                code={scanModal.code}
+                                message={scanModal.message}
+                                onClose={closeScanModal}
+                            />
+                        )}
                     </div>
                 )}
             </div>
