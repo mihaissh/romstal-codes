@@ -6,6 +6,7 @@ import {
     type CameraDevice,
 } from "html5-qrcode";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Scan } from "lucide-react";
 import StatusBadge, { type ScannerStatus } from "./scanner/StatusBadge";
 import ScannerView from "./scanner/ScannerView";
@@ -13,7 +14,6 @@ import ScannerControls from "./scanner/ScannerControls";
 
 interface Props {
     onScanSuccess: (decodedText: string) => void;
-    /** When true, camera is stopped (e.g. while scan result modal is open). */
     paused?: boolean;
 }
 
@@ -49,6 +49,7 @@ export default function Scanner({ onScanSuccess, paused = false }: Props) {
     const generationRef = useRef(0);
     const lockRef = useRef<Promise<void>>(Promise.resolve());
 
+    const [sessionOpen, setSessionOpen] = useState(false);
     const [status, setStatus] = useState<ScannerStatus>("idle");
     const [error, setError] = useState<string | null>(null);
     const [cameras, setCameras] = useState<CameraDevice[]>([]);
@@ -78,9 +79,17 @@ export default function Scanner({ onScanSuccess, paused = false }: Props) {
             } catch (err) {
                 console.error("Scanner stop error", err);
             }
-            if (myGen === generationRef.current) setStatus("idle");
+            if (myGen === generationRef.current) {
+                setStatus("idle");
+                setError(null);
+            }
         });
     }, [enqueue]);
+
+    const handleStop = useCallback(async () => {
+        await stop();
+        setSessionOpen(false);
+    }, [stop]);
 
     const lastScannedRef = useRef<{ code: string; time: number }>({ code: "", time: 0 });
 
@@ -178,6 +187,7 @@ export default function Scanner({ onScanSuccess, paused = false }: Props) {
                             : message,
                     );
                     setStatus("error");
+                    setSessionOpen(false);
                 }
             });
         },
@@ -191,8 +201,17 @@ export default function Scanner({ onScanSuccess, paused = false }: Props) {
     }, [stop]);
 
     useEffect(() => {
-        if (paused) stop();
+        if (paused) {
+            void stop();
+            setSessionOpen(false);
+        }
     }, [paused, stop]);
+
+    const handleScaneaza = () => {
+        setSessionOpen(true);
+        setError(null);
+        void start();
+    };
 
     const cycleCamera = async () => {
         if (cameras.length < 2 || !activeCameraId) return;
@@ -202,6 +221,27 @@ export default function Scanner({ onScanSuccess, paused = false }: Props) {
     };
 
     const activeCameraLabel = cameras.find((c) => c.id === activeCameraId)?.label ?? "—";
+
+    if (!sessionOpen) {
+        return (
+            <div className="space-y-3 animate-fade-up">
+                <Button
+                    type="button"
+                    size="lg"
+                    className="w-full h-12 gap-2 text-base font-mono"
+                    onClick={handleScaneaza}
+                >
+                    <Scan className="size-5" />
+                    Scanează
+                </Button>
+                {status === "error" && error ? (
+                    <div className="rounded-xl border border-destructive/30 bg-destructive/5 px-3 py-2.5 text-xs text-destructive">
+                        {error}
+                    </div>
+                ) : null}
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-4 animate-fade-up">
@@ -220,7 +260,6 @@ export default function Scanner({ onScanSuccess, paused = false }: Props) {
                         containerId={containerId}
                         status={status}
                         error={error}
-                        onStart={() => start()}
                         onRetry={() => start()}
                     />
 
@@ -229,17 +268,10 @@ export default function Scanner({ onScanSuccess, paused = false }: Props) {
                         hasMultipleCameras={cameras.length > 1}
                         onCycleCamera={cycleCamera}
                         isScanning={status === "scanning"}
-                        onStop={stop}
+                        onStop={handleStop}
                     />
                 </CardContent>
             </Card>
-
-            <div className="rounded-xl border border-blue-500/10 bg-blue-500/5 p-4">
-                <p className="text-[11px] italic leading-relaxed text-blue-600 dark:text-blue-400">
-                    Sfat: Asigura-te ca exista suficienta lumina si ca eticheta este plana pentru o
-                    scanare cat mai rapida.
-                </p>
-            </div>
         </div>
     );
 }

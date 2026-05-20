@@ -22,7 +22,6 @@ export default function AboutModal({ onClose }: Props) {
                     </CardAction>
                 </CardHeader>
                 <CardContent className="space-y-6 pt-6">
-                    {/* Stack Section */}
                     <section className="space-y-3">
                         <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-muted-foreground/70 font-mono">
                             <Code2 className="size-4 text-blue-500" />
@@ -36,34 +35,9 @@ export default function AboutModal({ onClose }: Props) {
                         </div>
                     </section>
 
-                    {/* Logic Section */}
-                    <section className="space-y-3">
-                        <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-muted-foreground/70 font-mono">
-                            <Sparkles className="size-4 text-purple-500" />
-                            Cum funcționează
-                        </div>
-                        <div className="space-y-3">
-                            <LogicItem 
-                                title="Căutare Inteligentă" 
-                                description="Algoritm hibrid care prioritizează codurile de produs și folosește tokenizare pentru denumiri."
-                                icon={<Zap className="size-4 text-amber-500" />}
-                            />
-                            <LogicItem 
-                                title="Gestiune Multi-Store" 
-                                description="Sistem dinamic de filtrare a stocurilor în funcție de locația selectată (1BN1, 1BV1)."
-                                icon={<Layout className="size-4 text-indigo-500" />}
-                            />
-                            <LogicItem 
-                                title="Productivitate" 
-                                description="Calculator de rest integrat și sistem de note persistente pentru eficientizarea fluxului de lucru."
-                                icon={<Code2 className="size-4 text-rose-500" />}
-                            />
-                        </div>
-                    </section>
-
                     <div className="pt-2 border-t border-border/50">
-                        <p className="text-[11px] text-center text-muted-foreground italic">
-                            Romstal Companion — creat pentru a simplifica procesul de identificare a produselor în depozite.
+                        <p className="text-[11px] text-center text-muted-foreground">
+                            Romstal Companion
                         </p>
                     </div>
                 </CardContent>
@@ -81,14 +55,3 @@ function TechBadge({ icon, label, color }: { icon: React.ReactNode; label: strin
     );
 }
 
-function LogicItem({ title, description, icon }: { title: string; description: string; icon: React.ReactNode }) {
-    return (
-        <div className="flex gap-3 p-3 rounded-xl bg-muted/30 border border-border/50 hover:bg-muted/50 transition-colors">
-            <div className="mt-0.5">{icon}</div>
-            <div className="space-y-1">
-                <h4 className="text-xs font-bold leading-none">{title}</h4>
-                <p className="text-[11px] text-muted-foreground leading-relaxed">{description}</p>
-            </div>
-        </div>
-    );
-}

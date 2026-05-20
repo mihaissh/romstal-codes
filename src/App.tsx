@@ -13,21 +13,16 @@ import Stoc from "@/components/Stoc";
 import Auth from "@/components/Auth";
 import AboutModal from "@/components/AboutModal";
 import ScanResultModal from "@/components/scanner/ScanResultModal";
-import ScannedList, { type ScannedItem } from "@/components/scanner/ScannedList";
+import ScannedList from "@/components/scanner/ScannedList";
 import { useSearchHistory } from "@/hooks/useSearchHistory";
+import { useScanSession } from "@/hooks/useScanSession";
 import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/hooks/useAuth";
-import { lookupProductByCodeForStore } from "@/utils/search";
 import type { Product } from "@/types/Product";
 import type { FilialaCode } from "@/types/filiala";
 import Scanner from "@/components/Scanner";
 
 type View = "search" | "calculator" | "notes" | "profile" | "stoc" | "scan";
-
-type ScanModalState =
-    | { status: "loading" }
-    | { status: "found"; product: Product; storageNote?: string }
-    | { status: "error"; code: string; message: string };
 
 export default function App() {
     const { theme, toggle: toggleTheme } = useTheme();
@@ -67,9 +62,18 @@ export default function App() {
     const [selected, setSelected] = useState<Product | null>(null);
     const [currentStore, setCurrentStore] = useState<FilialaCode>("1BN1");
     const [currentStorage, setCurrentStorage] = useState<StorageLocation>("deposit");
-    const [scanModal, setScanModal] = useState<ScanModalState | null>(null);
-    const [scanQuantity, setScanQuantity] = useState(1);
-    const [scannedItems, setScannedItems] = useState<ScannedItem[]>([]);
+    const {
+        scanModal,
+        scanQuantity,
+        setScanQuantity,
+        scannedItems,
+        scanPaused,
+        closeScanModal,
+        handleScanAdd,
+        handleScanSuccess,
+        removeScannedItem,
+        resetSession,
+    } = useScanSession(currentStore);
 
     const handleViewChange = (newView: View) => setView(newView);
 
@@ -94,73 +98,18 @@ export default function App() {
         setSelected(null);
         setQuery("");
         setCurrentStorage("deposit");
-        setScanModal(null);
-        setScanQuantity(1);
-        setScannedItems([]);
+        resetSession();
     };
 
     useEffect(() => {
-        if (view !== "scan") {
-            setScanModal(null);
-            setScanQuantity(1);
-        }
-    }, [view]);
+        if (view !== "scan") closeScanModal();
+    }, [view, closeScanModal]);
 
     const handleStorageSelect = (storage: StorageLocation) => {
         if (storage === currentStorage) return;
         setCurrentStorage(storage);
         setSelected(null);
         setQuery("");
-    };
-
-    const closeScanModal = () => {
-        setScanModal(null);
-        setScanQuantity(1);
-    };
-
-    const handleScanAdd = () => {
-        if (scanModal?.status !== "found" || scanQuantity < 1) return;
-
-        const { product } = scanModal;
-        setScannedItems((prev) => {
-            const existing = prev.find((item) => item.product.code === product.code);
-            if (existing) {
-                return prev.map((item) =>
-                    item.product.code === product.code
-                        ? { ...item, count: item.count + scanQuantity }
-                        : item,
-                );
-            }
-            return [{ product, count: scanQuantity }, ...prev];
-        });
-        closeScanModal();
-    };
-
-    const removeScannedItem = (code: string) => {
-        setScannedItems((prev) => prev.filter((item) => item.product.code !== code));
-    };
-
-    const handleScanSuccess = async (code: string) => {
-        if (scanModal !== null) return;
-
-        setScanQuantity(1);
-        setScanModal({ status: "loading" });
-
-        const result = await lookupProductByCodeForStore(code, currentStore);
-
-        if (result) {
-            setScanModal({
-                status: "found",
-                product: result.product,
-                storageNote: result.storageNote,
-            });
-        } else {
-            setScanModal({
-                status: "error",
-                code,
-                message: `Produsul cu codul ${code} nu a fost găsit la filiala ${currentStore}.`,
-            });
-        }
     };
 
     if (!isAppReady) return null;
@@ -235,10 +184,7 @@ export default function App() {
                             <StoreSelector currentStore={currentStore} onStoreSelect={handleStoreSelect} />
                         </div>
 
-                        <Scanner
-                            onScanSuccess={handleScanSuccess}
-                            paused={scanModal !== null}
-                        />
+                        <Scanner onScanSuccess={handleScanSuccess} paused={scanPaused} />
 
                         {scanModal?.status === "loading" && (
                             <ScanResultModal status="loading" onClose={closeScanModal} />
@@ -255,12 +201,6 @@ export default function App() {
                                 addDisabled={scanQuantity < 1}
                             />
                         )}
-
-                        <ScannedList
-                            items={scannedItems}
-                            store={currentStore}
-                            onRemove={removeScannedItem}
-                        />
                         {scanModal?.status === "error" && (
                             <ScanResultModal
                                 status="error"
@@ -269,6 +209,12 @@ export default function App() {
                                 onClose={closeScanModal}
                             />
                         )}
+
+                        <ScannedList
+                            items={scannedItems}
+                            store={currentStore}
+                            onRemove={removeScannedItem}
+                        />
                     </div>
                 )}
             </div>

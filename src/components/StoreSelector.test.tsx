@@ -11,11 +11,7 @@ describe("StoreSelector", () => {
     it("calls onStoreSelect when a store is clicked", () => {
         const onStoreSelect = vi.fn();
         render(<StoreSelector currentStore="1BN1" onStoreSelect={onStoreSelect} />);
-        
-        // Open dropdown
         fireEvent.click(screen.getByText("1BN1"));
-        
-        // Click another store
         fireEvent.click(screen.getByText("1BV1"));
         
         expect(onStoreSelect).toHaveBeenCalledWith("1BV1");

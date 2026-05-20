@@ -73,11 +73,6 @@ export default function ScanResultModal(props: ScanResultModalProps) {
                                 </Button>
                             </CardAction>
                         </CardHeader>
-                        <CardContent className="pb-6">
-                            <p className="text-sm text-muted-foreground font-mono">
-                                Se verifică codul în baza de date…
-                            </p>
-                        </CardContent>
                     </>
                 )}
 

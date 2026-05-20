@@ -200,9 +200,6 @@ function rowKey(code: string, storage: string): string {
     return `${normalizeCode(code)}|${normalizeStorage(storage)}`;
 }
 
-/**
- * Full rows from EXPORT — for Supabase replace upload.
- */
 export async function parseStockSpreadsheetRows(
     blob: Blob,
     fallbackStore: FilialaCode,
@@ -261,7 +258,6 @@ export async function parseStockSpreadsheetRows(
     return list;
 }
 
-/** Legacy local override map (browser-only) */
 export async function parseStockSpreadsheet(blob: Blob): Promise<StockOverridePayload> {
     const rows = await readWorkbookRows(blob);
     const layout = detectSheetLayout(rows);

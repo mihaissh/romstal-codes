@@ -2,7 +2,6 @@ import { describe, it, expect } from "vitest";
 import * as XLSX from "xlsx";
 import { parseStockSpreadsheet, parseStockSpreadsheetRows } from "./parseStockXlsx";
 
-/** Romstal EXPORT header row (same as desktop export) */
 const EXPORT_HEADERS = [
     "Unitate logistică",
     "Name 1",

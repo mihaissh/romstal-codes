@@ -1,6 +1,5 @@
 import type { FilialaCode } from "./filiala";
 
-/** One product line from EXPORT / spreadsheet, ready for Supabase upsert */
 export interface ParsedStockRow {
     code: string;
     name: string;
@@ -13,7 +12,6 @@ export interface ParsedStockRow {
     storeName: string;
 }
 
-/** Row saved before upload — full enough for safe Supabase upsert on undo */
 export interface StockSnapshotEntry {
     code: string;
     storage: string;

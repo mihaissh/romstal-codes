@@ -32,8 +32,6 @@ export function useCalculatorHistory() {
     const isFirstRun = useRef(true);
 
     useEffect(() => {
-        // Skip writing on the very first effect run — items already match storage,
-        // so this avoids any "save before load" races when the component remounts.
         if (isFirstRun.current) {
             isFirstRun.current = false;
             return;

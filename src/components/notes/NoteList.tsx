@@ -24,10 +24,6 @@ interface NoteListProps {
     onCreateClick: () => void;
 }
 
-// ─────────────────────────────────────────────────────────────
-// Compact Note Card (Linear/GitHub style)
-// ─────────────────────────────────────────────────────────────
-
 interface NoteCardProps {
     note: Note;
     onEdit: (note: Note) => void;
@@ -40,11 +36,9 @@ function NoteCard({ note, onEdit, onDelete }: NoteCardProps) {
             onClick={() => onEdit(note)}
             className={cn(
                 "p-3 group relative cursor-pointer transition-colors",
-                /* Flat card: no ring/shadow lift; note column header already carries doc-type color */
                 "shadow-none ring-0 hover:shadow-none hover:translate-y-0 border border-border/60",
             )}
         >
-            {/* Title + ID */}
             <div className="flex items-start justify-between gap-2 mb-2">
                 <h4 className="text-sm font-semibold text-foreground line-clamp-2 leading-snug flex-1 min-w-0">
                     {note.nume}
@@ -61,8 +55,6 @@ function NoteCard({ note, onEdit, onDelete }: NoteCardProps) {
                     <Trash2 className="size-3.5" />
                 </Button>
             </div>
-
-            {/* Doc number */}
             <div className="flex items-center gap-1.5 mb-2">
                 <span className="text-[10px] font-mono text-muted-foreground">
                     #{note.orderOrInvoice}
@@ -73,8 +65,6 @@ function NoteCard({ note, onEdit, onDelete }: NoteCardProps) {
                     </span>
                 )}
             </div>
-
-            {/* Tags */}
             {note.tags.length > 0 && (
                 <div className="flex flex-wrap gap-1 mb-2">
                     {note.tags.slice(0, 4).map(tag => (
@@ -95,8 +85,6 @@ function NoteCard({ note, onEdit, onDelete }: NoteCardProps) {
                     )}
                 </div>
             )}
-
-            {/* Client + Phone (inline, compact) */}
             <div className="flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
                 <span className="truncate flex-1">
                     <span className="opacity-60">→</span> {note.client}
@@ -117,10 +105,6 @@ function NoteCard({ note, onEdit, onDelete }: NoteCardProps) {
         </Card>
     );
 }
-
-// ─────────────────────────────────────────────────────────────
-// Main NoteList Component
-// ─────────────────────────────────────────────────────────────
 
 export default function NoteList({ notes, onEdit, onDelete, onCreateClick }: NoteListProps) {
     const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
@@ -168,7 +152,6 @@ export default function NoteList({ notes, onEdit, onDelete, onCreateClick }: Not
                         key={type} 
                         className="flex flex-col md:min-w-[300px] md:w-[300px] shrink-0 snap-start md:h-[calc(100vh-220px)]"
                     >
-                        {/* ─── Column Header (Sticky) ─── */}
                         <button
                             type="button"
                             onClick={() => toggleCollapse(type)}
@@ -193,8 +176,6 @@ export default function NoteList({ notes, onEdit, onDelete, onCreateClick }: Not
                                 {typeNotes.length}
                             </span>
                         </button>
-
-                        {/* ─── Scrollable Notes Container ─── */}
                         {!isCollapsed && (
                             <div className="relative flex-1 min-h-0">
                                 <div className="h-full overflow-y-auto overflow-x-hidden pr-1 scrollbar-thin">
@@ -209,8 +190,6 @@ export default function NoteList({ notes, onEdit, onDelete, onCreateClick }: Not
                                         ))}
                                     </div>
                                 </div>
-                                
-                                {/* Fade gradient at bottom indicating more content */}
                                 {typeNotes.length > 5 && (
                                     <div className="absolute bottom-0 left-0 right-1 h-12 bg-gradient-to-t from-background via-background/80 to-transparent pointer-events-none" />
                                 )}

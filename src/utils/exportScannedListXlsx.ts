@@ -1,4 +1,4 @@
-import type { ScannedItem } from "@/components/scanner/ScannedList";
+import type { ScannedItem } from "@/types/scanned";
 
 export async function exportScannedListXlsx(
     items: ScannedItem[],

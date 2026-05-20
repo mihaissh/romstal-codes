@@ -24,7 +24,6 @@ export function useStockUndo(store: FilialaCode) {
         try {
             localStorage.setItem(LS_KEY, JSON.stringify(all));
         } catch {
-            /* quota */
         }
     }, [all]);
 
