@@ -14,7 +14,6 @@ import ScannerControls from "./scanner/ScannerControls";
 
 interface Props {
     onScanSuccess: (decodedText: string) => void;
-    /** When true, camera is stopped (e.g. while scan result modal is open). */
     paused?: boolean;
 }
 
@@ -273,13 +272,6 @@ export default function Scanner({ onScanSuccess, paused = false }: Props) {
                     />
                 </CardContent>
             </Card>
-
-            <div className="rounded-xl border border-blue-500/10 bg-blue-500/5 p-4">
-                <p className="text-[11px] italic leading-relaxed text-blue-600 dark:text-blue-400">
-                    Sfat: Asigura-te ca exista suficienta lumina si ca eticheta este plana pentru o
-                    scanare cat mai rapida.
-                </p>
-            </div>
         </div>
     );
 }

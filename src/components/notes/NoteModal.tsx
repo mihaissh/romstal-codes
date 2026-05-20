@@ -7,10 +7,6 @@ import { Edit3, X, Phone, AlertCircle, FileText, User, Hash, Tag, AlignLeft, Tra
 import { cn } from "@/lib/utils";
 import type { Note, NoteTag, DocumentType } from "@/hooks/useNotes";
 
-// ─────────────────────────────────────────────────────────────
-// Constants
-// ─────────────────────────────────────────────────────────────
-
 const AVAILABLE_TAGS: NoteTag[] = [
     "platit", "neplatit", "livrare curier", "livrare marfa",
     "ridica client", "SPEDEX", "emisa", "ne emisa",
@@ -29,7 +25,6 @@ const TAG_COLORS: Record<NoteTag, string> = {
 
 export const DOCUMENT_TYPES: DocumentType[] = ["Factura", "Nota Livrare", "Proforma", "Oferta", "Altele"];
 
-/** Wait for backdrop (200ms) / panel (300ms) transitions before unmount */
 const CLOSE_UNMOUNT_MS = 340;
 
 export const DOC_COLORS: Record<DocumentType, string> = {
@@ -39,10 +34,6 @@ export const DOC_COLORS: Record<DocumentType, string> = {
     "Oferta": "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/40",
     "Altele": "bg-muted/50 text-muted-foreground border-border",
 };
-
-// ─────────────────────────────────────────────────────────────
-// Types
-// ─────────────────────────────────────────────────────────────
 
 interface FormState {
     nume: string;
@@ -72,10 +63,6 @@ interface NoteModalProps {
     editingNote: Note | null;
     error: string | null;
 }
-
-// ─────────────────────────────────────────────────────────────
-// Sub-components
-// ─────────────────────────────────────────────────────────────
 
 interface FieldLabelProps {
     icon: React.ReactNode;
@@ -111,10 +98,6 @@ function SidebarSection({ title, icon, children }: SidebarSectionProps) {
     );
 }
 
-// ─────────────────────────────────────────────────────────────
-// Main Component
-// ─────────────────────────────────────────────────────────────
-
 export default function NoteModal({
     isOpen,
     onClose,
@@ -128,10 +111,8 @@ export default function NoteModal({
     const [isSubmitting, setIsSubmitting] = useState(false);
     const titleInputRef = useRef<HTMLInputElement>(null);
     const [mounted, setMounted] = useState(isOpen);
-    /** Enables enter transition without swapping animation keyframes (avoids close flicker). */
     const [entered, setEntered] = useState(false);
 
-    /** Keep portal DOM until exit animations finish */
     useEffect(() => {
         if (isOpen) {
             setMounted(true);
@@ -160,7 +141,6 @@ export default function NoteModal({
         };
     }, [mounted, isOpen]);
 
-    // ── Reset form when opening or switching note ──
     useEffect(() => {
         if (!isOpen) return;
 
@@ -180,12 +160,10 @@ export default function NoteModal({
         setError(null);
     }, [editingNote, isOpen]);
 
-    // ── Sync external error ──
     useEffect(() => {
         setError(externalError);
     }, [externalError]);
 
-    // ── Escape key handler ──
     useEffect(() => {
         if (!isOpen) return;
 
@@ -200,7 +178,6 @@ export default function NoteModal({
         return () => window.removeEventListener("keydown", handleKeyDown);
     }, [isOpen, onClose]);
 
-    // ── Body scroll lock (while portal is rendered, incl. closing animation) ──
     useEffect(() => {
         if (!mounted) return;
 
@@ -212,7 +189,6 @@ export default function NoteModal({
         };
     }, [mounted]);
 
-    // ── Auto-focus title on create ──
     useEffect(() => {
         if (isOpen && !editingNote) {
             const timer = setTimeout(() => titleInputRef.current?.focus(), 250);
@@ -220,7 +196,6 @@ export default function NoteModal({
         }
     }, [isOpen, editingNote]);
 
-    // ── Handlers ──
     const updateField = useCallback(<K extends keyof FormState>(key: K, value: FormState[K]) => {
         setForm(prev => ({ ...prev, [key]: value }));
     }, []);
@@ -268,10 +243,8 @@ export default function NoteModal({
 
     const visuallyOpen = isOpen && entered;
 
-    // ── Render via Portal ──
     return createPortal(
         <div className="fixed inset-0 z-[100]" role="dialog" aria-modal="true">
-            {/* Backdrop: CSS transitions avoid animate-in/out class swap glitch on close */}
             <div
                 className={cn(
                     "absolute inset-0 bg-black/50 transition-opacity duration-200 ease-out",
@@ -280,8 +253,6 @@ export default function NoteModal({
                 onClick={() => isOpen && onClose()}
                 aria-hidden="true"
             />
-
-            {/* Side Panel */}
             <aside
                 className={cn(
                     "absolute inset-y-0 right-0 w-full sm:w-[540px] md:w-[600px] bg-card shadow-2xl flex flex-col",
@@ -290,8 +261,6 @@ export default function NoteModal({
                 )}
             >
                 <form onSubmit={handleSubmit} className="flex flex-col h-full">
-                    
-                    {/* ─── Header ─── */}
                     <header className="shrink-0 px-5 pt-4 pb-3 border-b border-border bg-card">
                         <div className="flex items-start justify-between gap-3">
                             <div className="flex-1 min-w-0">
@@ -330,15 +299,9 @@ export default function NoteModal({
                             </Button>
                         </div>
                     </header>
-
-                    {/* ─── Body ─── */}
                     <div className="flex-1 overflow-y-auto scrollbar-thin">
                         <div className="grid md:grid-cols-[1fr_240px] gap-0">
-                            
-                            {/* ── Main Content ── */}
                             <div className="px-5 py-5 space-y-5 md:border-r md:border-border">
-                                
-                                {/* Client */}
                                 <div>
                                     <FieldLabel icon={<User className="size-3.5" />}>Client</FieldLabel>
                                     <Input
@@ -349,8 +312,6 @@ export default function NoteModal({
                                         className="h-10 text-sm"
                                     />
                                 </div>
-
-                                {/* Document Number + Phone */}
                                 <div className="grid grid-cols-2 gap-3">
                                     <div>
                                         <FieldLabel icon={<Hash className="size-3.5" />}>Numar Doc.</FieldLabel>
@@ -373,8 +334,6 @@ export default function NoteModal({
                                         />
                                     </div>
                                 </div>
-
-                                {/* Description */}
                                 <div>
                                     <FieldLabel icon={<AlignLeft className="size-3.5" />}>Detalii</FieldLabel>
                                     <Textarea
@@ -384,8 +343,6 @@ export default function NoteModal({
                                         className="min-h-[160px] resize-y text-sm leading-relaxed"
                                     />
                                 </div>
-
-                                {/* Error */}
                                 {error && (
                                     <div className="flex items-center gap-2 p-3 rounded-md bg-destructive/10 border border-destructive/20 text-destructive text-xs animate-shake">
                                         <AlertCircle className="size-4 shrink-0" />
@@ -393,8 +350,6 @@ export default function NoteModal({
                                     </div>
                                 )}
                             </div>
-
-                            {/* ── Sidebar (Metadata) ── */}
                             <div className="px-5 py-1 bg-muted/20 md:bg-transparent">
                                 
                                 <SidebarSection title="Tip Document" icon={<FileText className="size-3.5" />}>
@@ -463,8 +418,6 @@ export default function NoteModal({
                             </div>
                         </div>
                     </div>
-
-                    {/* ─── Footer ─── */}
                     <footer className="shrink-0 px-5 py-3 border-t border-border bg-muted/30 flex items-center justify-between gap-2">
                         <div>
                             {editingNote && onDelete && (

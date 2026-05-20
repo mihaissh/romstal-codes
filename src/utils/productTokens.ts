@@ -1,4 +1,3 @@
-/** Token list for search — matches bulk import style */
 export function buildProductTokens(name: string, code: string): string[] {
     const fromName = name
         .toLowerCase()

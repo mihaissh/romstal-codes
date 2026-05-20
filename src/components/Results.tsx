@@ -23,7 +23,9 @@ function ResultsComponent({ product, onClear }: Props) {
             await navigator.clipboard.writeText(product.code);
             setCopied(true);
             setTimeout(() => setCopied(false), 1500);
-        } catch { /* noop */ }
+        } catch {
+            return;
+        }
     };
 
     type Tag = { label: string; cls: string };
@@ -57,7 +59,6 @@ function ResultsComponent({ product, onClear }: Props) {
             </CardHeader>
 
             <CardContent className="space-y-5 pt-2">
-                {/* Code block */}
                 <div className="flex items-center gap-3">
                     <div className="flex items-center gap-3 bg-tag-code-bg rounded-lg px-5 py-3">
                         <span className="text-[9px] font-mono font-bold text-tag-code-text/50 uppercase tracking-[0.2em]">Cod</span>
@@ -74,7 +75,6 @@ function ResultsComponent({ product, onClear }: Props) {
                     </Button>
                 </div>
 
-                {/* Tags */}
                 {tags.length > 0 && (
                     <div className="flex flex-wrap gap-2">
                         {tags.map((tag, i) => (
@@ -89,7 +89,6 @@ function ResultsComponent({ product, onClear }: Props) {
                     </div>
                 )}
 
-                {/* Info grid */}
                 <div className="grid grid-cols-2 gap-3">
                     <InfoBlock label="Depozitare" value={product.storage} sub={product.storageDesc} delay={200} />
                     <InfoBlock label="Magazin" value={product.store} sub={product.storeName} delay={260} />
