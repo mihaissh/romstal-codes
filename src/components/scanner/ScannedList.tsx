@@ -1,6 +1,9 @@
-import { Trash2 } from "lucide-react";
+import { useState } from "react";
+import { Download, Loader2, Trash2 } from "lucide-react";
 import type { Product } from "@/types/Product";
+import type { FilialaCode } from "@/types/filiala";
 import { Button } from "@/components/ui/button";
+import { exportScannedListXlsx } from "@/utils/exportScannedListXlsx";
 
 export interface ScannedItem {
     product: Product;
@@ -9,17 +12,46 @@ export interface ScannedItem {
 
 interface ScannedListProps {
     items: ScannedItem[];
+    store: FilialaCode;
     onRemove: (code: string) => void;
 }
 
-export default function ScannedList({ items, onRemove }: ScannedListProps) {
+export default function ScannedList({ items, store, onRemove }: ScannedListProps) {
+    const [exporting, setExporting] = useState(false);
+
     if (items.length === 0) return null;
+
+    const handleExport = async () => {
+        setExporting(true);
+        try {
+            await exportScannedListXlsx(items, store);
+        } finally {
+            setExporting(false);
+        }
+    };
 
     return (
         <div className="mt-6 space-y-3 animate-fade-up">
-            <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider mb-2">
-                Listă scanări ({items.length})
-            </h3>
+            <div className="flex items-center justify-between gap-2 mb-2">
+                <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider">
+                    Listă scanări ({items.length})
+                </h3>
+                <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5 font-mono text-[11px] shrink-0"
+                    disabled={exporting}
+                    onClick={handleExport}
+                >
+                    {exporting ? (
+                        <Loader2 className="size-3.5 animate-spin" />
+                    ) : (
+                        <Download className="size-3.5" />
+                    )}
+                    Export XLS
+                </Button>
+            </div>
             <div className="space-y-3">
                 {items.map(({ product, count }) => (
                     <div
