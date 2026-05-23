@@ -1,14 +1,14 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "@fontsource-variable/outfit";
+@import "@fontsource-variable/plus-jakarta-sans";
 @import "@fontsource-variable/jetbrains-mono";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-    --font-heading: 'Outfit Variable', ui-sans-serif, system-ui, sans-serif;
-    --font-sans: 'Outfit Variable', ui-sans-serif, system-ui, sans-serif;
+    --font-heading: 'Plus Jakarta Sans Variable', ui-sans-serif, system-ui, sans-serif;
+    --font-sans: 'Plus Jakarta Sans Variable', ui-sans-serif, system-ui, sans-serif;
     --font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
 
     --color-sidebar-ring: var(--sidebar-ring);
@@ -71,105 +71,105 @@
     --color-highlight: var(--highlight);
 }
 
-/* ─── LIGHT THEME: Soft & Easy on Eyes ─── */
+/* ─── LIGHT THEME: Restorative Warm Sandstone ─── */
 :root {
-    --background: oklch(0.96 0.01 250); /* Soft cool grey background */
-    --foreground: oklch(0.25 0.02 250); /* Softer dark text */
-    --card: oklch(0.99 0.005 250); /* Very slightly off-white cards */
-    --card-foreground: oklch(0.25 0.02 250);
-    --popover: oklch(0.99 0.005 250);
-    --popover-foreground: oklch(0.25 0.02 250);
-    --primary: oklch(0.55 0.20 25); /* Slightly softer Romstal Red */
+    --background: oklch(0.962 0.01 87.5); /* Warm sand/cream background (Anti-Flashbang) */
+    --foreground: oklch(0.281 0.01 61.1); /* Deep espresso text */
+    --card: oklch(0.98 0.005 78.3); /* Soft cotton card */
+    --card-foreground: oklch(0.281 0.01 61.1);
+    --popover: oklch(0.98 0.005 78.3);
+    --popover-foreground: oklch(0.281 0.01 61.1);
+    --primary: oklch(0.554 0.109 37.9); /* Sophisticated Burnt Terracotta (Brand Red adaptation) */
     --primary-foreground: oklch(0.98 0 0);
-    --secondary: oklch(0.92 0.01 250);
-    --secondary-foreground: oklch(0.30 0.03 250);
-    --muted: oklch(0.93 0.01 250);
-    --muted-foreground: oklch(0.50 0.02 250);
-    --accent: oklch(0.93 0.02 25);
-    --accent-foreground: oklch(0.40 0.15 25);
-    --destructive: oklch(0.60 0.20 25);
-    --border: oklch(0.85 0.01 250);
-    --input: oklch(0.85 0.01 250);
-    --ring: oklch(0.55 0.20 25);
+    --secondary: oklch(0.927 0.015 80.7); /* Sandy clay gray */
+    --secondary-foreground: oklch(0.281 0.01 61.1);
+    --muted: oklch(0.927 0.015 80.7);
+    --muted-foreground: oklch(0.556 0.019 76); /* Taupe */
+    --accent: oklch(0.939 0.026 84.6); /* Soft cream peach accent */
+    --accent-foreground: oklch(0.554 0.109 37.9);
+    --destructive: oklch(0.60 0.20 20);
+    --border: oklch(0.9 0.029 93.8); /* Warm sandy border */
+    --input: oklch(0.9 0.029 93.8);
+    --ring: oklch(0.554 0.109 37.9);
     --radius: 0.6rem;
 
-    /* Tag semantic colors — Light (Vibrant but balanced) */
-    --tag-code-bg: oklch(0.9 0.04 55);
-    --tag-code-text: oklch(0.35 0.1 55);
-    --tag-category-bg: oklch(0.92 0.06 155);
-    --tag-category-text: oklch(0.3 0.12 155);
-    --tag-material-bg: oklch(0.9 0.06 240);
-    --tag-material-text: oklch(0.3 0.15 240);
-    --tag-color-bg: oklch(0.92 0.06 20);
-    --tag-color-text: oklch(0.35 0.15 20);
-    --tag-dimension-bg: oklch(0.92 0.08 85);
-    --tag-dimension-text: oklch(0.35 0.15 85);
-    --highlight: oklch(0.55 0.22 25);
+    /* Tag semantic colors — Light (Warm Sandstone Palette) */
+    --tag-code-bg: oklch(0.92 0.02 182.5);
+    --tag-code-text: oklch(0.40 0.08 182.5); /* Muted Blue */
+    --tag-category-bg: oklch(0.92 0.03 129.2);
+    --tag-category-text: oklch(0.40 0.08 129.2); /* Muted Green */
+    --tag-material-bg: oklch(0.92 0.03 36.7);
+    --tag-material-text: oklch(0.40 0.08 36.7); /* Muted Terracotta */
+    --tag-color-bg: oklch(0.92 0.03 11.9);
+    --tag-color-text: oklch(0.40 0.08 11.9); /* Muted Pink */
+    --tag-dimension-bg: oklch(0.92 0.03 283.2);
+    --tag-dimension-text: oklch(0.40 0.08 283.2); /* Muted Purple */
+    --highlight: oklch(0.866 0.125 84.5); /* Ochre/Yellow */
 
-    --chart-1: oklch(0.62 0.14 55);
-    --chart-2: oklch(0.62 0.1 155);
-    --chart-3: oklch(0.62 0.12 230);
-    --chart-4: oklch(0.62 0.1 340);
-    --chart-5: oklch(0.62 0.12 70);
-    --sidebar: oklch(0.96 0.01 250);
-    --sidebar-foreground: oklch(0.15 0.02 250);
-    --sidebar-primary: oklch(0.55 0.22 25);
+    --chart-1: oklch(0.554 0.109 37.9);
+    --chart-2: oklch(0.40 0.08 129.2);
+    --chart-3: oklch(0.40 0.08 182.5);
+    --chart-4: oklch(0.40 0.08 36.7);
+    --chart-5: oklch(0.40 0.08 283.2);
+    --sidebar: oklch(0.962 0.01 87.5);
+    --sidebar-foreground: oklch(0.281 0.01 61.1);
+    --sidebar-primary: oklch(0.554 0.109 37.9);
     --sidebar-primary-foreground: oklch(0.98 0 0);
-    --sidebar-accent: oklch(0.92 0.015 250);
-    --sidebar-accent-foreground: oklch(0.15 0.02 250);
-    --sidebar-border: oklch(0.88 0.01 250);
-    --sidebar-ring: oklch(0.55 0.22 25);
+    --sidebar-accent: oklch(0.927 0.015 80.7);
+    --sidebar-accent-foreground: oklch(0.281 0.01 61.1);
+    --sidebar-border: oklch(0.9 0.029 93.8);
+    --sidebar-ring: oklch(0.554 0.109 37.9);
 }
 
-/* ─── DARK THEME: Monokai Inspired ─── */
+/* ─── DARK THEME: Warm Monokai Ristretto ─── */
 .dark {
-    --background: oklch(0.24 0.01 90); /* Monokai Background: #272822 */
-    --foreground: oklch(0.96 0.01 90); /* Monokai Foreground: #F8F8F2 */
-    --card: oklch(0.28 0.01 90); /* Slightly lighter for depth */
-    --card-foreground: oklch(0.96 0.01 90);
-    --popover: oklch(0.28 0.01 90);
-    --popover-foreground: oklch(0.96 0.01 90);
-    --primary: oklch(0.62 0.22 15); /* Monokai Pink/Red: #F92672 */
-    --primary-foreground: oklch(0.98 0.01 90);
-    --secondary: oklch(0.35 0.02 90); /* Monokai Grey: #49483E */
-    --secondary-foreground: oklch(0.96 0.01 90);
-    --muted: oklch(0.32 0.01 90);
-    --muted-foreground: oklch(0.75 0.02 90);
-    --accent: oklch(0.35 0.02 90);
-    --accent-foreground: oklch(0.85 0.12 100); /* Monokai Yellow accent */
-    --destructive: oklch(0.62 0.22 15); /* Pink/Red */
-    --border: oklch(0.35 0.02 90); /* Defined borders */
-    --input: oklch(0.35 0.02 90);
-    --ring: oklch(0.62 0.22 15);
+    --background: oklch(0.272 0.011 17.8); /* Warm Cacao / Espresso Black (#2C2525) */
+    --foreground: oklch(0.985 0.008 7.3); /* Cozy Bone White (#FFF8F9) */
+    --card: oklch(0.306 0.012 17.8); /* Lighter Cacao (#352D2D) */
+    --card-foreground: oklch(0.985 0.008 7.3);
+    --popover: oklch(0.306 0.012 17.8);
+    --popover-foreground: oklch(0.985 0.008 7.3);
+    --primary: oklch(0.71 0.182 11.9); /* Ristretto Pink (#fd6883 - Romstal Red adaptation) */
+    --primary-foreground: oklch(0.985 0.008 7.3);
+    --secondary: oklch(0.365 0.013 17.7); /* Warm Cacao Gray (#453C3C) */
+    --secondary-foreground: oklch(0.985 0.008 7.3);
+    --muted: oklch(0.306 0.012 17.8);
+    --muted-foreground: oklch(0.664 0.019 17.6); /* Warm Taupe Gray (#9F8F8F) */
+    --accent: oklch(0.365 0.013 17.7);
+    --accent-foreground: oklch(0.866 0.125 84.5); /* Ristretto Yellow (#f9cc6c) */
+    --destructive: oklch(0.71 0.182 11.9);
+    --border: oklch(0.365 0.013 17.7); /* Warm Cacao border (#453C3C) */
+    --input: oklch(0.365 0.013 17.7);
+    --ring: oklch(0.71 0.182 11.9);
     --radius: 0.6rem;
 
-    /* Tag semantic colors — Dark (Monokai Palette) */
-    --tag-code-bg: oklch(0.35 0.02 90);
-    --tag-code-text: oklch(0.85 0.10 190); /* Cyan #66D9EF */
-    --tag-category-bg: oklch(0.32 0.04 140);
-    --tag-category-text: oklch(0.85 0.15 140); /* Green #A6E22E */
-    --tag-material-bg: oklch(0.32 0.06 65);
-    --tag-material-text: oklch(0.80 0.15 65); /* Orange #FD971F */
-    --tag-color-bg: oklch(0.32 0.06 15);
-    --tag-color-text: oklch(0.85 0.15 15); /* Pink #F92672 */
-    --tag-dimension-bg: oklch(0.32 0.08 300);
-    --tag-dimension-text: oklch(0.80 0.12 300); /* Purple #AE81FF */
-    --highlight: oklch(0.90 0.12 100); /* Yellow #E6DB74 */
+    /* Tag semantic colors — Dark (Monokai Ristretto Palette) */
+    --tag-code-bg: oklch(0.32 0.02 182.5);
+    --tag-code-text: oklch(0.83 0.08 182.5); /* Cyan #85dacc */
+    --tag-category-bg: oklch(0.32 0.03 129.2);
+    --tag-category-text: oklch(0.83 0.10 129.2); /* Green #adda78 */
+    --tag-material-bg: oklch(0.32 0.03 36.7);
+    --tag-material-text: oklch(0.746 0.131 36.7); /* Orange #f38d70 */
+    --tag-color-bg: oklch(0.32 0.03 11.9);
+    --tag-color-text: oklch(0.71 0.182 11.9); /* Pink #fd6883 */
+    --tag-dimension-bg: oklch(0.32 0.03 283.2);
+    --tag-dimension-text: oklch(0.758 0.094 283.2); /* Purple #a8a9eb */
+    --highlight: oklch(0.866 0.125 84.5); /* Yellow #f9cc6c */
 
-    --chart-1: oklch(0.62 0.22 15);   /* Pink */
-    --chart-2: oklch(0.85 0.15 140);  /* Green */
-    --chart-3: oklch(0.85 0.10 190);  /* Cyan */
-    --chart-4: oklch(0.80 0.15 65);   /* Orange */
-    --chart-5: oklch(0.80 0.12 300);  /* Purple */
+    --chart-1: oklch(0.71 0.182 11.9);   /* Pink */
+    --chart-2: oklch(0.83 0.10 129.2);  /* Green */
+    --chart-3: oklch(0.83 0.08 182.5);  /* Cyan */
+    --chart-4: oklch(0.746 0.131 36.7);  /* Orange */
+    --chart-5: oklch(0.758 0.094 283.2); /* Purple */
     
-    --sidebar: oklch(0.24 0.01 90);
-    --sidebar-foreground: oklch(0.96 0.01 90);
-    --sidebar-primary: oklch(0.62 0.22 15);
-    --sidebar-primary-foreground: oklch(0.98 0.01 90);
-    --sidebar-accent: oklch(0.35 0.02 90);
-    --sidebar-accent-foreground: oklch(0.96 0.01 90);
-    --sidebar-border: oklch(0.35 0.02 90);
-    --sidebar-ring: oklch(0.62 0.22 15);
+    --sidebar: oklch(0.272 0.011 17.8);
+    --sidebar-foreground: oklch(0.985 0.008 7.3);
+    --sidebar-primary: oklch(0.71 0.182 11.9);
+    --sidebar-primary-foreground: oklch(0.985 0.008 7.3);
+    --sidebar-accent: oklch(0.365 0.013 17.7);
+    --sidebar-accent-foreground: oklch(0.985 0.008 7.3);
+    --sidebar-border: oklch(0.365 0.013 17.7);
+    --sidebar-ring: oklch(0.71 0.182 11.9);
 }
 
 @layer base {
