@@ -68,6 +68,10 @@
     --color-tag-color-text: var(--tag-color-text);
     --color-tag-dimension-bg: var(--tag-dimension-bg);
     --color-tag-dimension-text: var(--tag-dimension-text);
+    --color-tag-angle-bg: var(--tag-angle-bg);
+    --color-tag-angle-text: var(--tag-angle-text);
+    --color-tag-thread-bg: var(--tag-thread-bg);
+    --color-tag-thread-text: var(--tag-thread-text);
     --color-highlight: var(--highlight);
 }
 
@@ -102,6 +106,10 @@
     --tag-material-text: oklch(0.527 0.137 150.1); /* Bold Forest Green (#15803d) */
     --tag-dimension-bg: oklch(0.962 0.058 95.6);
     --tag-dimension-text: oklch(0.555 0.146 49); /* Bold Amber/Orange (#b45309) */
+    --tag-angle-bg: oklch(0.941 0.03 12.6);
+    --tag-angle-text: oklch(0.455 0.171 13.7); /* Saturated Rose */
+    --tag-thread-bg: oklch(0.984 0.019 200.9);
+    --tag-thread-text: oklch(0.45 0.077 224.3); /* Saturated Cyan */
     --tag-color-bg: oklch(0.946 0.033 307.2);
     --tag-color-text: oklch(0.438 0.198 303.7); /* Bold Violet Purple (#6b21a8) */
     --highlight: oklch(0.577 0.234 28); /* Bold Crimson Brand Red highlight */
@@ -152,6 +160,10 @@
     --tag-material-text: oklch(0.8 0.182 151.7); /* Saturated Bright Green (#4ade80) */
     --tag-dimension-bg: oklch(0.279 0.074 45.6);
     --tag-dimension-text: oklch(0.837 0.164 84.4); /* Saturated Gold/Yellow (#fbbf24) */
+    --tag-angle-bg: oklch(0.271 0.101 12.1);
+    --tag-angle-text: oklch(0.81 0.106 11.6); /* Saturated Rose Dark */
+    --tag-thread-bg: oklch(0.302 0.054 229.7);
+    --tag-thread-text: oklch(0.865 0.115 207.1); /* Saturated Cyan Dark */
     --tag-color-bg: oklch(0.291 0.143 302.7);
     --tag-color-text: oklch(0.722 0.177 305.5); /* Saturated Lavender Purple (#c084fc) */
     --highlight: oklch(0.861 0.173 91.9); /* Bright Neon Yellow for active matching */

@@ -97,10 +97,10 @@ function SearchBarComponent({ query, onChange, onSelect, category }: Props) {
         if (product.dimensions?.diameter)
             meta.push({ label: `⌀${product.dimensions.diameter}`, cls: "bg-tag-dimension-bg text-tag-dimension-text" });
         if (product.dimensions?.angle)
-            meta.push({ label: `${product.dimensions.angle}°`, cls: "bg-tag-dimension-bg text-tag-dimension-text" });
+            meta.push({ label: `${product.dimensions.angle}°`, cls: "bg-tag-angle-bg text-tag-angle-text" });
         if (product.dimensions?.threadSize)
             product.dimensions.threadSize.forEach(t =>
-                meta.push({ label: `${t}"`, cls: "bg-tag-dimension-bg text-tag-dimension-text" }));
+                meta.push({ label: `${t}"`, cls: "bg-tag-thread-bg text-tag-thread-text" }));
         if (product.color)
             meta.push({ label: product.color, cls: "bg-tag-color-bg text-tag-color-text" });
         return meta;

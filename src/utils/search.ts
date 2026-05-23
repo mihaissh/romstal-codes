@@ -15,6 +15,39 @@ export interface SearchOutput {
     total: number;
 }
 
+function scoreProduct(product: Product, queryTerms: string[]): number {
+    const nameLower = product.name.toLowerCase();
+    let score = 0;
+
+    // 1. Specificity: Shorter titles get a bonus (closer to exact matches)
+    score += Math.max(0, 1000 - product.name.length);
+
+    // 2. Query word alignment and positioning
+    queryTerms.forEach((term) => {
+        const pos = nameLower.indexOf(term);
+        if (pos === 0) {
+            score += 250; // starts with the search term
+        } else if (pos > 0) {
+            // Check if matches a word boundary
+            const prevChar = nameLower.charAt(pos - 1);
+            if (/\s|[-/]/.test(prevChar)) {
+                score += 150; // starts a word/spec block
+            } else {
+                score += 50; // matching substring inside a word
+            }
+            // Closer to the start gets higher score
+            score += Math.max(0, 100 - pos);
+        }
+    });
+
+    // 3. Stock availability: prioritize items with stock
+    if (product.stock && product.stock > 0) {
+        score += 200;
+    }
+
+    return score;
+}
+
 export async function searchSupabase(
     query: string,
     options: {
@@ -29,7 +62,7 @@ export async function searchSupabase(
         return { codeResults: [], tokenResults: [], total: 0 };
     }
 
-    const { category = null, maxCodeResults = 5, maxTokenResults = 20, exactCodeOnly = false, store } = options;
+    const { category = null, maxCodeResults = 3, maxTokenResults = 5, exactCodeOnly = false, store } = options;
     const trimmed = query.trim().toLowerCase();
     const isCode = /^\d/.test(trimmed);
 
@@ -47,15 +80,15 @@ export async function searchSupabase(
             } else {
                 codeQuery = codeQuery.ilike('code', `${trimmed}%`);
             }
-
+ 
             if (store) {
                 codeQuery = codeQuery.eq('store', store);
             }
-
+ 
             const { data: codeData } = await codeQuery
                 .order('stock', { ascending: false })
                 .limit(maxCodeResults);
-
+ 
             if (codeData) {
                 codeResults = codeData.map((p) => ({
                     product: productFromDbRow(p as unknown as Record<string, unknown>),
@@ -64,7 +97,7 @@ export async function searchSupabase(
                 }));
             }
         }
-
+ 
         const searchTerms = trimmed.split(/\s+/).filter(t => t.length > 1);
         if (searchTerms.length > 0) {
             let tokenQuery = supabase.from('products').select('*');
@@ -72,31 +105,41 @@ export async function searchSupabase(
             searchTerms.forEach(term => {
                 tokenQuery = tokenQuery.ilike('name', `%${term}%`);
             });
-
+ 
             if (category) {
                 tokenQuery = tokenQuery.eq('category', category);
             }
-
+ 
             if (store) {
                 tokenQuery = tokenQuery.eq('store', store);
             }
-
+ 
+            // Fetch a larger pool of candidates to perform client-side ranking
             const { data: tokenData } = await tokenQuery
                 .order('stock', { ascending: false })
-                .limit(maxTokenResults);
-
+                .limit(25);
+ 
             if (tokenData) {
                 const codeSet = new Set(codeResults.map(r => r.product.code));
-                tokenResults = tokenData
+                const parsedResults = tokenData
                     .filter(p => !codeSet.has(p.code))
-                    .map((p) => ({
-                        product: productFromDbRow(p as unknown as Record<string, unknown>),
-                        score: 100,
-                        matchType: 'token-match'
-                    }));
+                    .map((p) => {
+                        const product = productFromDbRow(p as unknown as Record<string, unknown>);
+                        return {
+                            product,
+                            score: scoreProduct(product, searchTerms),
+                            matchType: 'token-match' as const
+                        };
+                    });
+                
+                // Sort by relevance score descending
+                parsedResults.sort((a, b) => b.score - a.score);
+                
+                // Slice to the requested maxTokenResults (default 5)
+                tokenResults = parsedResults.slice(0, maxTokenResults);
             }
         }
-
+ 
         return {
             codeResults,
             tokenResults,

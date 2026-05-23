@@ -40,10 +40,10 @@ function ResultsComponent({ product, onClear }: Props) {
     if (product.dimensions?.diameter)
         tags.push({ label: `⌀ ${product.dimensions.diameter}mm`, cls: "bg-tag-dimension-bg text-tag-dimension-text" });
     if (product.dimensions?.angle)
-        tags.push({ label: `${product.dimensions.angle}°`, cls: "bg-tag-dimension-bg text-tag-dimension-text" });
+        tags.push({ label: `${product.dimensions.angle}°`, cls: "bg-tag-angle-bg text-tag-angle-text" });
     if (product.dimensions?.threadSize)
         product.dimensions.threadSize.forEach(t =>
-            tags.push({ label: `${t}"`, cls: "bg-tag-dimension-bg text-tag-dimension-text" }));
+            tags.push({ label: `${t}"`, cls: "bg-tag-thread-bg text-tag-thread-text" }));
 
     return (
         <Card className="animate-fade-up overflow-visible">
