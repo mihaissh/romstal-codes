@@ -11,8 +11,8 @@
     <title>Romstal Companion</title>
     <style>
       /* Prevent flash — matches both theme backgrounds */
-      html { background: #2C2525; }
-      html:not(.dark) { background: #F5F2EB; }
+      html { background: #121214; }
+      html:not(.dark) { background: #f1f5f9; }
     </style>
     <script>
       (function() {
@@ -24,13 +24,13 @@
     </script>
   </head>
   <body>
-    <div id="initial-loader" style="position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; transition: opacity 0.5s ease-out; background-color: #F5F2EB;">
+    <div id="initial-loader" style="position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; transition: opacity 0.5s ease-out; background-color: #f1f5f9;">
       <script>
         (function() {
           var theme = localStorage.getItem('theme');
           var isDark = theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches);
           if (isDark) {
-            document.getElementById('initial-loader').style.backgroundColor = '#2C2525';
+            document.getElementById('initial-loader').style.backgroundColor = '#121214';
           }
           if (sessionStorage.getItem('app_loaded')) {
             document.getElementById('initial-loader').style.display = 'none';
