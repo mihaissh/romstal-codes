@@ -240,3 +240,111 @@ export async function restoreStockSnapshot(
     onProgress?.({ phase: "done", message: "Restaurare finalizata." });
     return restored;
 }
+
+export interface StockUploadOptions {
+    targetStores: FilialaCode[];
+    mode: "complete" | "partial";
+    fileName?: string;
+    onProgress?: (progress: StockUploadProgress) => void;
+}
+
+export interface StockUploadResult {
+    store: FilialaCode;
+    snapshot: StockUploadSnapshot | null;
+    upserted: number;
+    zeroed: number;
+}
+
+export async function executeStockUpload(
+    fileRows: ParsedStockRow[],
+    options: StockUploadOptions
+): Promise<StockUploadResult[]> {
+    const { targetStores, mode, fileName = "", onProgress } = options;
+    const results: StockUploadResult[] = [];
+
+    onProgress?.({ phase: "snapshot", message: "Pornesc actualizarea..." });
+
+    for (const store of targetStores) {
+        const rows = fileRows.filter((r) => r.store === store);
+
+        if (rows.length === 0) {
+            continue;
+        }
+
+        const fileKeys = new Set(rows.map((r) => rowKey(r.code, r.storage)));
+        let snapshot: StockUploadSnapshot | null = null;
+        let zeroed = 0;
+
+        // In both modes, we save a backup snapshot of the store's current stock state for safety,
+        // so that the Undo functionality works exactly the same!
+        const entries = await fetchStoreStockSnapshot(store, (p) => {
+            onProgress?.({
+                phase: "snapshot",
+                message: `[${store}] ${p.message}`,
+                current: p.current,
+                total: p.total,
+            });
+        });
+        snapshot = {
+            store,
+            createdAt: new Date().toISOString(),
+            fileName,
+            entries,
+        };
+
+        // 1. Upsert rows
+        let upserted = 0;
+        for (let i = 0; i < rows.length; i += BATCH) {
+            const batch = rows.slice(i, i + BATCH).map(parsedRowToUpsert);
+            const { error } = await supabase
+                .from("products")
+                .upsert(batch, { onConflict: "code,store,storage" });
+
+            if (error) {
+                throw new Error(`[${store}] Eroare la scrierea stocului: ${error.message}`);
+            }
+            upserted += batch.length;
+            onProgress?.({
+                phase: "upsert",
+                message: `[${store}] Scriere stoc nou...`,
+                current: upserted,
+                total: rows.length,
+            });
+        }
+
+        // 2. Zero out missing if mode is complete
+        if (mode === "complete" && snapshot) {
+            const toZero: StockSnapshotEntry[] = [];
+            for (const e of snapshot.entries) {
+                if (!fileKeys.has(rowKey(e.code, e.storage))) {
+                    toZero.push(e);
+                }
+            }
+
+            for (let i = 0; i < toZero.length; i += BATCH) {
+                const batch = toZero
+                    .slice(i, i + BATCH)
+                    .map((z) => snapshotEntryToUpsert(z, store, 0));
+                const { error } = await supabase
+                    .from("products")
+                    .upsert(batch, { onConflict: "code,store,storage" });
+
+                if (error) {
+                    throw new Error(`[${store}] Eroare la curățarea stocului vechi: ${error.message}`);
+                }
+                zeroed += batch.length;
+                onProgress?.({
+                    phase: "zero",
+                    message: `[${store}] Pun stoc 0 la produsele lipsă din fișier...`,
+                    current: zeroed,
+                    total: toZero.length,
+                });
+            }
+        }
+
+        results.push({ store, snapshot, upserted, zeroed });
+    }
+
+    onProgress?.({ phase: "done", message: "Actualizare finalizată cu succes!" });
+    return results;
+}

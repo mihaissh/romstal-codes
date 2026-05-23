@@ -11,6 +11,9 @@ const COD_KEYS = new Set([
     "codarticol",
     "articole",
     "material",
+    "sku",
+    "productcode",
+    "itemcode",
 ]);
 
 const STORAGE_KEYS = new Set([
@@ -22,6 +25,9 @@ const STORAGE_KEYS = new Set([
     "locatie",
     "locdedepozitare",
     "locdepozitare",
+    "storagelocation",
+    "sloc",
+    "lgort",
 ]);
 
 const STOC_KEYS = new Set([
@@ -33,6 +39,10 @@ const STOC_KEYS = new Set([
     "sold",
     "cant",
     "fararestr",
+    "quantity",
+    "stock",
+    "unrestricted",
+    "unrestr",
 ]);
 
 export interface ParsedSheetLayout {
@@ -128,12 +138,36 @@ function pickExportExtras(headerLine: unknown[]): Omit<ParsedSheetLayout, "heade
         return -1;
     };
     return {
-        nameIx: find((k) => k === "descrierematerial", (k) => k.includes("descriere") && k.includes("material")),
-        storageDescIx: find((k) => k.startsWith("descrloc") && k.includes("depoz")),
-        unitIx: find((k) => k === "unitatedebaza", (k) => k.includes("unitate") && k.includes("baza")),
-        valueIx: find((k) => k === "valnerestrict", (k) => k.startsWith("val") && k.includes("restric")),
-        storeIx: find((k) => k === "unitatelogistica", (k) => k.includes("unitate") && k.includes("logist")),
-        storeNameIx: find((k) => k === "name1"),
+        nameIx: find(
+            (k) => k === "descrierematerial",
+            (k) => k.includes("descriere") && k.includes("material"),
+            (k) => k === "denumire" || k === "nume" || k === "name" || k === "description" || k.includes("descriere")
+        ),
+        storageDescIx: find(
+            (k) => k.startsWith("descrloc") && k.includes("depoz"),
+            (k) => k.includes("descriere") && k.includes("depoz"),
+            (k) => k.includes("descr") && (k.includes("loc") || k.includes("mag")),
+            (k) => k.includes("magazie") && k.includes("desc")
+        ),
+        unitIx: find(
+            (k) => k === "unitatedebaza",
+            (k) => k.includes("unitate") && k.includes("baza"),
+            (k) => k === "um" || k === "uom" || k === "unitate" || k === "unit"
+        ),
+        valueIx: find(
+            (k) => k === "valnerestrict",
+            (k) => k.startsWith("val") && k.includes("restric"),
+            (k) => k === "valoare" || k === "value" || k === "pret" || k === "price"
+        ),
+        storeIx: find(
+            (k) => k === "unitatelogistica",
+            (k) => k.includes("unitate") && k.includes("logist"),
+            (k) => k === "filiala" || k === "store" || k === "centru" || k === "gestiune" || k === "punctlucru" || k === "plant"
+        ),
+        storeNameIx: find(
+            (k) => k === "name1",
+            (k) => k.includes("nume") && (k.includes("filiala") || k.includes("gesti") || k.includes("centr") || k.includes("store"))
+        ),
     };
 }
 

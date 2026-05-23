@@ -61,4 +61,29 @@ describe("parseStockSpreadsheet", () => {
         const result = await parseStockSpreadsheet(blob);
         expect(result.codes["12345"]).toBe(12);
     });
+
+    it("parses English and alternative header variants", async () => {
+        const blob = buildExportBlob([
+            ["sku", "product name", "quantity", "sloc", "store", "uom", "price"],
+            ["40010001", "Prod A", 15, "1V00", "1BN1", "buc", 45.5],
+            ["40020002", "Prod B", 3, "1V00", "1BV1", "buc", 99.0],
+        ]);
+
+        const rows = await parseStockSpreadsheetRows(blob, "1BN1");
+        expect(rows).toHaveLength(2);
+        
+        expect(rows[0].code).toBe("40010001");
+        expect(rows[0].stock).toBe(15);
+        expect(rows[0].store).toBe("1BN1");
+        expect(rows[0].storage).toBe("1V00");
+        expect(rows[0].unit).toBe("buc");
+        expect(rows[0].value).toBe(45.5);
+
+        expect(rows[1].code).toBe("40020002");
+        expect(rows[1].stock).toBe(3);
+        expect(rows[1].store).toBe("1BV1");
+        expect(rows[1].storage).toBe("1V00");
+        expect(rows[1].unit).toBe("buc");
+        expect(rows[1].value).toBe(99.0);
+    });
 });
