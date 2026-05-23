@@ -1,14 +1,16 @@
--- Run in Supabase SQL editor if uploads fail with permission errors.
--- Adjust auth rules to match how you secure the app (e.g. authenticated staff only).
+-- RULAZĂ ACESTE COMANDE ÎN SUPABASE SQL EDITOR PENTRU A PERMITE ACTUALIZAREA STOCULUI:
+-- Această configurare permite utilizatorilor autentificați să insereze și să actualizeze produse în tabelul "products".
 
--- Example: allow authenticated users to update products for stock upload
--- create policy "products_stock_update_authenticated"
---   on public.products for update
---   to authenticated
---   using (true)
---   with check (true);
+-- 1. Permite inserarea de noi rânduri de către utilizatorii autentificați
+CREATE POLICY "products_stock_insert_authenticated"
+  ON public.products FOR INSERT
+  TO authenticated
+  WITH CHECK (true);
 
--- create policy "products_stock_insert_authenticated"
---   on public.products for insert
---   to authenticated
---   with check (true);
+-- 2. Permite actualizarea rândurilor existente de către utilizatorii autentificați
+CREATE POLICY "products_stock_update_authenticated"
+  ON public.products FOR UPDATE
+  TO authenticated
+  USING (true)
+  WITH CHECK (true);
+

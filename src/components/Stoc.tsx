@@ -1,13 +1,13 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { FilialaCode } from "@/types/filiala";
 import type { Product } from "@/types/Product";
 import type { StockUploadProgress } from "@/types/stock-upload";
 import { supabase } from "@/lib/supabase";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useStockUndo } from "@/hooks/useStockUndo";
-import { parseStockSpreadsheetRows } from "@/utils/parseStockXlsx";
-import { replaceStoreStockFromFile, restoreStockSnapshot } from "@/utils/stockSupabase";
+import { restoreStockSnapshot } from "@/utils/stockSupabase";
 import { productFromDbRow } from "@/utils/productFromDb";
+import StockUploadWizard from "@/components/stoc/StockUploadWizard";
 import StoreSelector from "@/components/StoreSelector";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,7 +41,7 @@ interface StocProps {
 }
 
 export default function Stoc({ store, onStoreSelect }: StocProps) {
-    const { snapshot: undoSnapshot, saveSnapshot, clearSnapshot } = useStockUndo(store);
+    const { snapshot: undoSnapshot, clearSnapshot } = useStockUndo(store);
 
     const [rows, setRows] = useState<Product[]>([]);
     const [totalCount, setTotalCount] = useState<number | null>(null);
@@ -57,8 +57,7 @@ export default function Stoc({ store, onStoreSelect }: StocProps) {
     const [uploadHint, setUploadHint] = useState<{ tone: "ok" | "err" | "warn"; text: string } | null>(
         null,
     );
-
-    const fileRef = useRef<HTMLInputElement>(null);
+    const [isUploadWizardOpen, setIsUploadWizardOpen] = useState(false);
 
     const bumpList = useCallback(() => setListVersion((v) => v + 1), []);
 
@@ -127,69 +126,6 @@ export default function Stoc({ store, onStoreSelect }: StocProps) {
         };
     }, [store, page, debouncedFilter, listVersion]);
 
-    const handleFile = async (list: FileList | null) => {
-        const f = list?.[0];
-        if (!f) return;
-
-        let parsedCount = 0;
-        try {
-            const preview = await parseStockSpreadsheetRows(f, store);
-            parsedCount = preview.length;
-        } catch (e) {
-            setUploadHint({
-                tone: "err",
-                text: e instanceof Error ? e.message : "Eroare la citirea fisierului.",
-            });
-            if (fileRef.current) fileRef.current.value = "";
-            return;
-        }
-
-        const ok = window.confirm(
-            `Inlocuiesti TOT stocul pentru ${store} in Supabase?\n\n` +
-                `• ${parsedCount.toLocaleString("ro-RO")} pozitii din fisier vor fi scrise/actualizate\n` +
-                `• Produsele din ${store} care NU sunt in fisier vor primi stoc 0\n` +
-                `• Poti reveni o singura data cu „Anuleaza ultimul upload”\n\n` +
-                `Fisier: ${f.name}`,
-        );
-        if (!ok) {
-            if (fileRef.current) fileRef.current.value = "";
-            return;
-        }
-
-        setUploadBusy(true);
-        setUploadHint(null);
-        setUploadProgress({ phase: "snapshot", message: "Pornire…" });
-
-        try {
-            const fileRows = await parseStockSpreadsheetRows(f, store);
-            const { snapshot, upserted, zeroed } = await replaceStoreStockFromFile(
-                store,
-                fileRows,
-                {
-                    fileName: f.name,
-                    onProgress: setUploadProgress,
-                },
-            );
-
-            const backupSaved = saveSnapshot(snapshot);
-            setUploadHint({
-                tone: backupSaved ? "ok" : "warn",
-                text: backupSaved
-                    ? `Stoc ${store} actualizat in Supabase: ${upserted.toLocaleString("ro-RO")} din fisier, ${zeroed.toLocaleString("ro-RO")} pozitii puse la 0 (lipsa din fisier).`
-                    : `Stoc ${store} actualizat in Supabase (${upserted.toLocaleString("ro-RO")} + ${zeroed.toLocaleString("ro-RO")} la 0), dar backup-ul pentru anulare nu a putut fi salvat in browser (catalog prea mare).`,
-            });
-            bumpList();
-        } catch (e) {
-            setUploadHint({
-                tone: "err",
-                text: e instanceof Error ? e.message : "Eroare la upload.",
-            });
-        } finally {
-            setUploadBusy(false);
-            setUploadProgress(null);
-            if (fileRef.current) fileRef.current.value = "";
-        }
-    };
 
     const handleUndo = async () => {
         if (!undoSnapshot) return;
@@ -260,15 +196,10 @@ export default function Stoc({ store, onStoreSelect }: StocProps) {
                                 variant="default"
                                 size="sm"
                                 className="gap-1.5 font-mono"
-                                disabled={uploadBusy}
-                                onClick={() => fileRef.current?.click()}
+                                onClick={() => setIsUploadWizardOpen(true)}
                             >
-                                {uploadBusy ? (
-                                    <Loader2 className="size-4 animate-spin" />
-                                ) : (
-                                    <Upload className="size-4" />
-                                )}
-                                Înlocuiește stoc {store}
+                                <Upload className="size-4" />
+                                Import / Actualizare Stoc SAP
                             </Button>
                             <Button
                                 type="button"
@@ -288,14 +219,6 @@ export default function Stoc({ store, onStoreSelect }: StocProps) {
                             </Button>
                         </div>
                     </div>
-
-                    <input
-                        ref={fileRef}
-                        type="file"
-                        accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                        hidden
-                        onChange={(e) => handleFile(e.target.files)}
-                    />
                 </CardHeader>
                 <CardContent className="space-y-3">
                     <div className="flex gap-2 text-[11px] text-amber-800 dark:text-amber-200 bg-amber-500/10 border border-amber-500/25 rounded-lg px-3 py-2">
@@ -458,6 +381,16 @@ export default function Stoc({ store, onStoreSelect }: StocProps) {
                     ) : null}
                 </CardContent>
             </Card>
+
+            {isUploadWizardOpen && (
+                <StockUploadWizard
+                    currentStore={store}
+                    onClose={() => {
+                        setIsUploadWizardOpen(false);
+                        bumpList();
+                    }}
+                />
+            )}
         </div>
     );
 }
