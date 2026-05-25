@@ -141,7 +141,7 @@ export default function App() {
                         <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent mb-6" />
 
                         <div className="relative z-50 mb-8 animate-fade-up" style={{ animationDelay: "120ms" }}>
-                            <SearchBar query={query} onChange={setQuery} onSelect={handleSelectProduct} category={null} />
+                            <SearchBar query={query} onChange={setQuery} onSelect={handleSelectProduct} category={null} store={currentStore} storage={currentStorage} />
                         </div>
 
                         {selected && (

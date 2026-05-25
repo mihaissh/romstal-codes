@@ -6,14 +6,20 @@ import { useClickOutside } from "@/hooks/useClickOutside";
 import SearchInput from "./search/SearchInput";
 import { SearchResults } from "./search/SearchResults";
 
+
+import type { FilialaCode } from "@/types/filiala";
+import type { StorageLocation } from "./StorageSelector";
+
 interface Props {
     query: string;
     onChange: (query: string) => void;
     onSelect: (product: Product) => void;
     category: string | null;
+    store: FilialaCode;
+    storage: StorageLocation;
 }
 
-function SearchBarComponent({ query, onChange, onSelect, category }: Props) {
+function SearchBarComponent({ query, onChange, onSelect, category, store, storage }: Props) {
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [results, setResults] = useState<SearchOutput>({ codeResults: [], tokenResults: [], total: 0 });
@@ -34,13 +40,13 @@ function SearchBarComponent({ query, onChange, onSelect, category }: Props) {
             }
 
             setLoading(true);
-            const searchResults = await searchSupabase(debouncedQuery, { category });
+            const searchResults = await searchSupabase(debouncedQuery, { category, store, storage });
             setResults(searchResults);
             setLoading(false);
         };
 
         performSearch();
-    }, [debouncedQuery, category]);
+    }, [debouncedQuery, category, store, storage]);
 
     const allProducts = useMemo(() => [
         ...results.codeResults.map(r => r.product),
@@ -76,6 +82,42 @@ function SearchBarComponent({ query, onChange, onSelect, category }: Props) {
         }
     }, [open, allProducts, selectedIndex, handleSelect]);
 
+    const getHighlightClass = (word: string): string => {
+        const w = word.trim().toLowerCase();
+        
+        // Category (Blue)
+        if (["cot", "teava", "tevi", "teu", "mufa", "robinet", "rob", "reductie", "red", "dop", "niplu", "racord", "bratara", "cruce"].includes(w)) {
+            return "bg-tag-category-bg/20 text-tag-category-text font-bold px-1 rounded-sm";
+        }
+        
+        // Material (Green)
+        if (["ppr", "pvc", "pehd", "pe", "alama", "bronz", "cupru", "cu", "fonta", "inox"].includes(w)) {
+            return "bg-tag-material-bg/20 text-tag-material-text font-bold px-1 rounded-sm";
+        }
+        
+        // Color (Purple)
+        if (["alb", "alba", "gri", "negru", "neagra", "albastru", "verde"].includes(w)) {
+            return "bg-tag-color-bg/20 text-tag-color-text font-bold px-1 rounded-sm";
+        }
+        
+        // Thread (Cyan)
+        if (w.includes("/") || w.endsWith('"') || w.endsWith("tol")) {
+            return "bg-tag-thread-bg/20 text-tag-thread-text font-bold px-1 rounded-sm";
+        }
+        
+        // Angle (Rose)
+        if (["90", "45", "30", "67", "87", "90°", "45°", "90g", "45g", "90grd", "45grd"].includes(w)) {
+            return "bg-tag-angle-bg/20 text-tag-angle-text font-bold px-1 rounded-sm";
+        }
+        
+        // Diameter (Amber)
+        if (w.startsWith("d") || ["16", "20", "25", "32", "40", "50", "63", "75", "90", "110", "125", "160"].includes(w) || w.endsWith("mm")) {
+            return "bg-tag-dimension-bg/20 text-tag-dimension-text font-bold px-1 rounded-sm";
+        }
+        
+        return "bg-transparent text-highlight font-bold px-0.5";
+    };
+
     const highlight = useCallback((text: string): React.ReactNode => {
         if (keywords.length === 0) return text;
         const pattern = keywords.map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
@@ -83,28 +125,10 @@ function SearchBarComponent({ query, onChange, onSelect, category }: Props) {
         const parts = text.split(regex);
         return parts.map((part, i) =>
             regex.test(part)
-                ? <mark key={i} className="bg-transparent text-highlight font-bold">{part}</mark>
+                ? <mark key={i} className={getHighlightClass(part)}>{part}</mark>
                 : part
         );
     }, [keywords]);
-
-    const buildMeta = useCallback((product: Product): { label: string; cls: string }[] => {
-        const meta: { label: string; cls: string }[] = [];
-        if (product.category !== "Altele")
-            meta.push({ label: product.category, cls: "bg-tag-category-bg text-tag-category-text" });
-        if (product.productMaterial)
-            meta.push({ label: product.productMaterial, cls: "bg-tag-material-bg text-tag-material-text" });
-        if (product.dimensions?.diameter)
-            meta.push({ label: `⌀${product.dimensions.diameter}`, cls: "bg-tag-dimension-bg text-tag-dimension-text" });
-        if (product.dimensions?.angle)
-            meta.push({ label: `${product.dimensions.angle}°`, cls: "bg-tag-dimension-bg text-tag-dimension-text" });
-        if (product.dimensions?.threadSize)
-            product.dimensions.threadSize.forEach(t =>
-                meta.push({ label: `${t}"`, cls: "bg-tag-dimension-bg text-tag-dimension-text" }));
-        if (product.color)
-            meta.push({ label: product.color, cls: "bg-tag-color-bg text-tag-color-text" });
-        return meta;
-    }, []);
 
     return (
         <div ref={containerRef} className="relative w-full">
@@ -124,7 +148,6 @@ function SearchBarComponent({ query, onChange, onSelect, category }: Props) {
                     selectedIndex={selectedIndex} 
                     onSelect={handleSelect} 
                     highlight={highlight} 
-                    buildMeta={buildMeta} 
                 />
             )}
 

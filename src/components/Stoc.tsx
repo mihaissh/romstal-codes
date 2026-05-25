@@ -27,6 +27,7 @@ import {
     Upload,
     Undo2,
     AlertTriangle,
+    RefreshCw,
 } from "lucide-react";
 
 const PAGE_SIZE = 50;
@@ -161,10 +162,85 @@ export default function Stoc({ store, onStoreSelect }: StocProps) {
         }
     };
 
+    const handleRestoreMetadata = async () => {
+        const ok = window.confirm(
+            "Recuperezi metadatele (categorii, materiale, dimensiuni, culori) din backup-urile locale?\n\n" +
+            "Stocul fizic existent NU va fi modificat."
+        );
+        if (!ok) return;
+
+        setUploadBusy(true);
+        setUploadHint(null);
+        
+        try {
+            setUploadProgress({ phase: "upsert", message: "Încărcare date locale backup..." });
+            
+            const fileLoaders = [
+                () => import("../stoc_1bn1_deposit.json"),
+                () => import("../stoc_1bn1_expo.json"),
+                () => import("../stoc_1bv1_deposit.json"),
+                () => import("../stoc_1bv1_expo.json"),
+            ];
+
+            let totalProcessed = 0;
+
+            for (let fIdx = 0; fIdx < fileLoaders.length; fIdx++) {
+                const loader = fileLoaders[fIdx];
+                const res = await loader();
+                const items = res.default as any[];
+                
+                if (!Array.isArray(items) || items.length === 0) continue;
+
+                const BATCH_SIZE = 200;
+                for (let i = 0; i < items.length; i += BATCH_SIZE) {
+                    const chunk = items.slice(i, i + BATCH_SIZE);
+                    const batch = chunk.map(p => ({
+                        code: p.code,
+                        store: p.store,
+                        storage: p.storage,
+                        category: p.category,
+                        productmaterial: p.productMaterial,
+                        color: p.color,
+                        dimensions: p.dimensions
+                    }));
+
+                    const { error } = await supabase
+                        .from("products")
+                        .upsert(batch, { onConflict: "code,store,storage" });
+
+                    if (error) {
+                        throw new Error(`Eroare la scriere (Fișier ${fIdx + 1}, batch ${i}): ${error.message}`);
+                    }
+
+                    totalProcessed += chunk.length;
+                    setUploadProgress({
+                        phase: "upsert",
+                        message: `Scriere metadate (Fișier ${fIdx + 1}/${fileLoaders.length})...`,
+                        current: totalProcessed,
+                    });
+                }
+            }
+
+            setUploadHint({
+                tone: "ok",
+                text: `Recuperare finalizată cu succes! Au fost actualizate metadatele pentru ${totalProcessed.toLocaleString("ro-RO")} produse.`,
+            });
+            bumpList();
+        } catch (e) {
+            setUploadHint({
+                tone: "err",
+                text: e instanceof Error ? e.message : "Eroare la recuperarea metadatelor.",
+            });
+        } finally {
+            setUploadBusy(false);
+            setUploadProgress(null);
+        }
+    };
+
     const totalPages =
         totalCount != null && totalCount > 0
-            ? Math.max(1, Math.ceil(totalCount / PAGE_SIZE))
-            : 1;
+             ? Math.max(1, Math.ceil(totalCount / PAGE_SIZE))
+             : 1;
 
     const storeLabelLong = store === "1BV1" ? "Romstal Brasov 1 (1BV1)" : "Romstal Brasov BN (1BN1)";
 
@@ -216,6 +292,17 @@ export default function Stoc({ store, onStoreSelect }: StocProps) {
                             >
                                 <Undo2 className="size-4" />
                                 Anulează ultimul upload
+                            </Button>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="gap-1.5 border-amber-500/30 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 font-mono"
+                                disabled={uploadBusy}
+                                onClick={handleRestoreMetadata}
+                            >
+                                <RefreshCw className={cn("size-4", uploadBusy && "animate-spin")} />
+                                Recuperare etichete
                             </Button>
                         </div>
                     </div>
