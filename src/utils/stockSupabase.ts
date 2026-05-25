@@ -78,10 +78,6 @@ function parsedRowToUpsert(row: ParsedStockRow) {
     return {
         code: row.code,
         name: row.name,
-        category: "Altele",
-        productmaterial: null,
-        color: null,
-        dimensions: null,
         stock: row.stock,
         unit: row.unit,
         value: row.value,
@@ -97,10 +93,6 @@ function snapshotEntryToUpsert(entry: StockSnapshotEntry, store: FilialaCode, st
     return {
         code: entry.code,
         name: entry.name,
-        category: "Altele",
-        productmaterial: null,
-        color: null,
-        dimensions: null,
         stock,
         unit: entry.unit,
         value: entry.value,

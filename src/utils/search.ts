@@ -56,13 +56,14 @@ export async function searchSupabase(
         maxTokenResults?: number;
         exactCodeOnly?: boolean;
         store?: FilialaCode;
+        storage?: 'deposit' | 'expo';
     } = {}
 ): Promise<SearchOutput> {
     if (!query || query.trim().length === 0) {
         return { codeResults: [], tokenResults: [], total: 0 };
     }
 
-    const { category = null, maxCodeResults = 3, maxTokenResults = 5, exactCodeOnly = false, store } = options;
+    const { category = null, maxCodeResults = 3, maxTokenResults = 5, exactCodeOnly = false, store, storage } = options;
     const trimmed = query.trim().toLowerCase();
     const isCode = /^\d/.test(trimmed);
 
@@ -83,6 +84,12 @@ export async function searchSupabase(
  
             if (store) {
                 codeQuery = codeQuery.eq('store', store);
+            }
+
+            if (storage === 'expo') {
+                codeQuery = codeQuery.eq('storage', '1V06');
+            } else if (storage === 'deposit') {
+                codeQuery = codeQuery.eq('storage', '1V00');
             }
  
             const { data: codeData } = await codeQuery
@@ -112,6 +119,12 @@ export async function searchSupabase(
  
             if (store) {
                 tokenQuery = tokenQuery.eq('store', store);
+            }
+
+            if (storage === 'expo') {
+                tokenQuery = tokenQuery.eq('storage', '1V06');
+            } else if (storage === 'deposit') {
+                tokenQuery = tokenQuery.eq('storage', '1V00');
             }
  
             // Fetch a larger pool of candidates to perform client-side ranking

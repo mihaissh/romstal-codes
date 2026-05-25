@@ -7,11 +7,10 @@ interface RowProps {
     isSelected: boolean;
     onClick: () => void;
     highlight: (text: string) => React.ReactNode;
-    meta: { label: string; cls: string }[];
     index: number;
 }
 
-export const SearchRow = memo(function SearchRow({ product, isSelected, onClick, highlight, meta, index }: RowProps) {
+export const SearchRow = memo(function SearchRow({ product, isSelected, onClick, highlight, index }: RowProps) {
     const [copied, setCopied] = useState(false);
 
     const handleCopy = async (e: React.MouseEvent) => {
@@ -36,15 +35,6 @@ export const SearchRow = memo(function SearchRow({ product, isSelected, onClick,
                 <div className="text-sm font-medium text-foreground leading-snug overflow-x-auto whitespace-nowrap scrollbar-none">
                     {highlight(product.name)}
                 </div>
-                {meta.length > 0 && (
-                    <div className="flex items-center gap-1 mt-1.5 flex-wrap">
-                        {meta.slice(0, 5).map((m, i) => (
-                            <span key={i} className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-semibold leading-none ${m.cls}`}>
-                                {m.label}
-                            </span>
-                        ))}
-                    </div>
-                )}
             </div>
             <code className="flex-shrink-0 font-mono text-[11px] font-bold bg-tag-code-bg text-tag-code-text px-2 py-1 rounded">
                 {product.code}

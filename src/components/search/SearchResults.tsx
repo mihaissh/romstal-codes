@@ -8,15 +8,13 @@ interface SearchResultsProps {
     selectedIndex: number;
     onSelect: (product: Product) => void;
     highlight: (text: string) => React.ReactNode;
-    buildMeta: (product: Product) => { label: string; cls: string }[];
 }
 
 export const SearchResults = forwardRef<HTMLDivElement, SearchResultsProps>(({ 
     results, 
     selectedIndex, 
     onSelect, 
-    highlight, 
-    buildMeta 
+    highlight 
 }, ref) => {
     if (results.total === 0) return null;
 
@@ -42,7 +40,6 @@ export const SearchResults = forwardRef<HTMLDivElement, SearchResultsProps>(({
                                 isSelected={i === selectedIndex}
                                 onClick={() => onSelect(r.product)} 
                                 highlight={highlight}
-                                meta={buildMeta(r.product)} 
                                 index={i} 
                             />
                         ))}
@@ -60,7 +57,6 @@ export const SearchResults = forwardRef<HTMLDivElement, SearchResultsProps>(({
                                     isSelected={idx === selectedIndex}
                                     onClick={() => onSelect(r.product)} 
                                     highlight={highlight}
-                                    meta={buildMeta(r.product)} 
                                     index={i} 
                                 />
                             );

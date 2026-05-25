@@ -10,6 +10,8 @@ import {
     CardContent,
 } from "@/components/ui/card";
 
+import { parseMetaFromName } from "@/utils/productMetadata";
+
 interface Props {
     product: Product;
     onClear: () => void;
@@ -31,18 +33,27 @@ function ResultsComponent({ product, onClear }: Props) {
     type Tag = { label: string; cls: string };
     const tags: Tag[] = [];
 
-    if (product.category !== 'Altele')
-        tags.push({ label: product.category, cls: "bg-tag-category-bg text-tag-category-text" });
-    if (product.productMaterial)
-        tags.push({ label: product.productMaterial, cls: "bg-tag-material-bg text-tag-material-text" });
-    if (product.color)
-        tags.push({ label: product.color, cls: "bg-tag-color-bg text-tag-color-text" });
-    if (product.dimensions?.diameter)
-        tags.push({ label: `⌀ ${product.dimensions.diameter}mm`, cls: "bg-tag-dimension-bg text-tag-dimension-text" });
-    if (product.dimensions?.angle)
-        tags.push({ label: `${product.dimensions.angle}°`, cls: "bg-tag-angle-bg text-tag-angle-text" });
-    if (product.dimensions?.threadSize)
-        product.dimensions.threadSize.forEach(t =>
+    // Dynamically parse if DB metadata is empty
+    const parsed = parseMetaFromName(product.name);
+    const cat = product.category && product.category !== 'Altele' ? product.category : parsed.category;
+    const mat = product.productMaterial || parsed.productMaterial;
+    const col = product.color || parsed.color;
+    const dims = (product.dimensions?.diameter || product.dimensions?.angle || product.dimensions?.threadSize)
+        ? product.dimensions
+        : parsed.dimensions;
+
+    if (cat && cat !== 'Altele')
+        tags.push({ label: cat, cls: "bg-tag-category-bg text-tag-category-text" });
+    if (mat)
+        tags.push({ label: mat, cls: "bg-tag-material-bg text-tag-material-text" });
+    if (col)
+        tags.push({ label: col, cls: "bg-tag-color-bg text-tag-color-text" });
+    if (dims?.diameter)
+        tags.push({ label: `⌀ ${dims.diameter}mm`, cls: "bg-tag-dimension-bg text-tag-dimension-text" });
+    if (dims?.angle)
+        tags.push({ label: `${dims.angle}°`, cls: "bg-tag-angle-bg text-tag-angle-text" });
+    if (dims?.threadSize)
+        dims.threadSize.forEach(t =>
             tags.push({ label: `${t}"`, cls: "bg-tag-thread-bg text-tag-thread-text" }));
 
     return (
